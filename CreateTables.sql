@@ -8,6 +8,18 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+CREATE TABLE [dbo].[MovimientoCredito](
+	[ID] [int] NOT NULL,
+	[Fecha] [date] NULL,
+	[Monto] [money] NULL,
+	[IdAsistencia] [int] NULL,
+ CONSTRAINT [PK_MovimientoCredito] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
 CREATE TABLE [dbo].[Jornada](
 	[ID] [int] NOT NULL,
 	[TipoJornada] [int] NOT NULL,
@@ -141,6 +153,22 @@ CREATE TABLE [dbo].[PlanillaMes](
 ) ON [PRIMARY]
 GO
 
+CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
+	[ID] [int] NOT NULL,
+	[FechaInicio] [date] NOT NULL,
+	[FechaFinal] [date] NOT NULL,
+	[SalarioNeto] [money] NOT NULL,
+	[TotalDeducciones] [int] NOT NULL,
+	[IdObrero] [int] NOT NULL,
+	[IdPlanillaMes] [int] NOT NULL,
+	[IdPlanillaSemana] [int] NOT NULL,
+ CONSTRAINT [PK_PlanillaSemanaXEmpleado] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
 CREATE TABLE [dbo].[PlanillaSemana](
 	[ID] [int] NOT NULL,
 	[FechaInicio] [date] NOT NULL,
@@ -161,6 +189,18 @@ CREATE TABLE [dbo].[TipoDeduccion](
 	[Porcentual] [varchar](128) NOT NULL,
 	[Valor] [decimal](5, 5) NOT NULL,
  CONSTRAINT [PK_TipoDeduccion] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[MovimientoDebito](
+	[ID] [int] NOT NULL,
+	[Fecha] [date] NOT NULL,
+	[Monto] [money] NOT NULL,
+	[IdDeduccion] [int] NOT NULL,
+ CONSTRAINT [PK_MovimientoDebito] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -245,11 +285,11 @@ GO
 ALTER TABLE [dbo].[Jornada] CHECK CONSTRAINT [FK_Jornada_TipoJornada]
 GO
 
-ALTER TABLE [dbo].[Movimiento]  WITH CHECK ADD  CONSTRAINT [FK_Movimiento_PlanillaSemana] FOREIGN KEY([IdPlanilla])
-REFERENCES [dbo].[PlanillaSemana] ([ID])
+ALTER TABLE [dbo].[Movimiento]  WITH CHECK ADD  CONSTRAINT [FK_Movimiento_PlanillaSemanaXEmpleado] FOREIGN KEY([IdPlanilla])
+REFERENCES [dbo].[PlanillaSemanaXEmpleado] ([ID])
 GO
 
-ALTER TABLE [dbo].[Movimiento] CHECK CONSTRAINT [FK_Movimiento_PlanillaSemana]
+ALTER TABLE [dbo].[Movimiento] CHECK CONSTRAINT [FK_Movimiento_PlanillaSemanaXEmpleado]
 GO
 
 ALTER TABLE [dbo].[Movimiento]  WITH CHECK ADD  CONSTRAINT [FK_Movimiento_TipoMovimiento] FOREIGN KEY([TipoMovimiento])
@@ -259,6 +299,30 @@ GO
 ALTER TABLE [dbo].[Movimiento] CHECK CONSTRAINT [FK_Movimiento_TipoMovimiento]
 GO
 
+ALTER TABLE [dbo].[MovimientoCredito]  WITH CHECK ADD  CONSTRAINT [FK_MovimientoCredito_MarcasDeAsistencia] FOREIGN KEY([IdAsistencia])
+REFERENCES [dbo].[MarcasDeAsistencia] ([ID])
+GO
 
+ALTER TABLE [dbo].[MovimientoCredito] CHECK CONSTRAINT [FK_MovimientoCredito_MarcasDeAsistencia]
+GO
 
+ALTER TABLE [dbo].[MovimientoDebito]  WITH CHECK ADD  CONSTRAINT [FK_MovimientoDebito_Deducciones] FOREIGN KEY([IdDeduccion])
+REFERENCES [dbo].[Deducciones] ([ID])
+GO
 
+ALTER TABLE [dbo].[MovimientoDebito] CHECK CONSTRAINT [FK_MovimientoDebito_Deducciones]
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaMes] FOREIGN KEY([IdPlanillaMes])
+REFERENCES [dbo].[PlanillaMes] ([ID])
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaMes]
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaSemana] FOREIGN KEY([IdPlanillaSemana])
+REFERENCES [dbo].[PlanillaSemana] ([ID])
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaSemana]
+GO
