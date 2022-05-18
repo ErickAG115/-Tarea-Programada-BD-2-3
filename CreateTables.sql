@@ -8,6 +8,17 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+CREATE TABLE [dbo].[Jornada](
+	[ID] [int] NOT NULL,
+	[TipoJornada] [int] NOT NULL,
+	[IdAsistencias] [int] NOT NULL,
+ CONSTRAINT [PK_Jornada] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
 CREATE TABLE [dbo].[Usuarios](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Nombre] [varchar](16) NOT NULL,
@@ -21,7 +32,7 @@ GO
 
 CREATE TABLE [dbo].[TipoDocIdentidad](
 	[ID] [int] NOT NULL,
-	[NombreTip] [char](128) NOT NULL,
+	[NombreTip] [varchar](128) NOT NULL,
  CONSTRAINT [PK_TipoDocIdentidad] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -31,7 +42,7 @@ GO
 
 CREATE TABLE [dbo].[Departamentos](
 	[ID] [int] NOT NULL,
-	[NombreDep] [char](128) NOT NULL,
+	[NombreDep] [varchar](128) NOT NULL,
  CONSTRAINT [PK_Departamentos] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -53,14 +64,125 @@ GO
 
 CREATE TABLE [dbo].[Obrero](
 	[ID] [int] IDENTITY(1,1)NOT NULL,
-	[Nombre] [char](128) NOT NULL,
+	[Nombre] [varchar](128) NOT NULL,
 	[IdTipoDocIdentidad] [int] NOT NULL,
 	[ValorDocIdentidad] [int] NOT NULL,
 	[IdPuesto] [int] NOT NULL,
 	[FechaNacimiento] [date] NOT NULL,
 	[IdDepartamento] [int] NOT NULL,
 	[Borrado] [bit] NOT NULL DEFAULT 1,
+	[IdJornada] [int] NOT NULL,
  CONSTRAINT [PK_Obrero] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[Deducciones](
+	[ID] [int] NOT NULL,
+	[IdObrero] [int] NOT NULL,
+	[IdTipoDeduccion] [int] NOT NULL,
+	[Monto] [money] NOT NULL,
+ CONSTRAINT [PK_Deducciones] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[Feriados](
+	[ID] [int] NOT NULL,
+	[Nombre] [varchar](128) NOT NULL,
+	[Fecha] [date] NOT NULL,
+ CONSTRAINT [PK_Feriados] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[MarcasDeAsistencia](
+	[ID] [int] NOT NULL,
+	[ValorTipoDocu] [int] NOT NULL,
+	[HoraEntrada] [time](7) NOT NULL,
+	[HoraSalida] [time](7) NOT NULL,
+ CONSTRAINT [PK_MarcasDeAsistencia] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[Movimiento](
+	[ID] [int] NOT NULL,
+	[Fecha] [date] NOT NULL,
+	[Monto] [money] NOT NULL,
+	[IdPlanilla] [int] NOT NULL,
+	[TipoMovimiento] [int] NOT NULL,
+ CONSTRAINT [PK_Movimiento] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[PlanillaMes](
+	[ID] [int] NOT NULL,
+	[FechaInicio] [date] NOT NULL,
+	[FechaFinal] [date] NOT NULL,
+	[SalarioNeto] [money] NOT NULL,
+	[SalarioTotal] [money] NOT NULL,
+	[TotalDeducciones] [int] NOT NULL,
+ CONSTRAINT [PK_PlanillaMes] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[PlanillaSemana](
+	[ID] [int] NOT NULL,
+	[FechaInicio] [date] NOT NULL,
+	[FechaFinal] [date] NOT NULL,
+	[SalarioNeto] [money] NOT NULL,
+	[TotalDeducciones] [int] NOT NULL,
+ CONSTRAINT [PK_PlanillaSemana] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[TipoDeduccion](
+	[ID] [int] NOT NULL,
+	[Nombre] [varchar](128) NOT NULL,
+	[Obligatorio] [varchar](128) NOT NULL,
+	[Porcentual] [varchar](128) NOT NULL,
+	[Valor] [decimal](5, 5) NOT NULL,
+ CONSTRAINT [PK_TipoDeduccion] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[TipoJornada](
+	[ID] [int] NOT NULL,
+	[NombreJ] [varchar](128) NOT NULL,
+	[HoraEntrada] [time](7) NOT NULL,
+	[HoraSalida] [time](7) NOT NULL,
+ CONSTRAINT [PK_TipoJornada] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[TipoMovimiento](
+	[ID] [int] NOT NULL,
+	[Nombre] [varchar](128) NOT NULL,
+ CONSTRAINT [PK_TipoMovimiento] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -86,6 +208,55 @@ REFERENCES [dbo].[Puesto] ([ID])
 GO
 
 ALTER TABLE [dbo].[Obrero] CHECK CONSTRAINT [FK_Obrero_Puesto]
+GO
+
+ALTER TABLE [dbo].[Obrero]  WITH CHECK ADD  CONSTRAINT [FK_Obrero_Jornada] FOREIGN KEY([IdJornada])
+REFERENCES [dbo].[Jornada] ([ID])
+GO
+
+ALTER TABLE [dbo].[Obrero] CHECK CONSTRAINT [FK_Obrero_Jornada]
+GO
+
+ALTER TABLE [dbo].[Deducciones]  WITH CHECK ADD  CONSTRAINT [FK_Deducciones_Obrero] FOREIGN KEY([IdObrero])
+REFERENCES [dbo].[Obrero] ([ID])
+GO
+
+ALTER TABLE [dbo].[Deducciones] CHECK CONSTRAINT [FK_Deducciones_Obrero]
+GO
+
+ALTER TABLE [dbo].[Deducciones]  WITH CHECK ADD  CONSTRAINT [FK_Deducciones_TipoDeduccion] FOREIGN KEY([IdTipoDeduccion])
+REFERENCES [dbo].[TipoDeduccion] ([ID])
+GO
+
+ALTER TABLE [dbo].[Deducciones] CHECK CONSTRAINT [FK_Deducciones_TipoDeduccion]
+GO
+
+ALTER TABLE [dbo].[Jornada]  WITH CHECK ADD  CONSTRAINT [FK_Jornada_MarcasDeAsistencia] FOREIGN KEY([IdAsistencias])
+REFERENCES [dbo].[MarcasDeAsistencia] ([ID])
+GO
+
+ALTER TABLE [dbo].[Jornada] CHECK CONSTRAINT [FK_Jornada_MarcasDeAsistencia]
+GO
+
+ALTER TABLE [dbo].[Jornada]  WITH CHECK ADD  CONSTRAINT [FK_Jornada_TipoJornada] FOREIGN KEY([TipoJornada])
+REFERENCES [dbo].[TipoJornada] ([ID])
+GO
+
+ALTER TABLE [dbo].[Jornada] CHECK CONSTRAINT [FK_Jornada_TipoJornada]
+GO
+
+ALTER TABLE [dbo].[Movimiento]  WITH CHECK ADD  CONSTRAINT [FK_Movimiento_PlanillaSemana] FOREIGN KEY([IdPlanilla])
+REFERENCES [dbo].[PlanillaSemana] ([ID])
+GO
+
+ALTER TABLE [dbo].[Movimiento] CHECK CONSTRAINT [FK_Movimiento_PlanillaSemana]
+GO
+
+ALTER TABLE [dbo].[Movimiento]  WITH CHECK ADD  CONSTRAINT [FK_Movimiento_TipoMovimiento] FOREIGN KEY([TipoMovimiento])
+REFERENCES [dbo].[TipoMovimiento] ([ID])
+GO
+
+ALTER TABLE [dbo].[Movimiento] CHECK CONSTRAINT [FK_Movimiento_TipoMovimiento]
 GO
 
 
