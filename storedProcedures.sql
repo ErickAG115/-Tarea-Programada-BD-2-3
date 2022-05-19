@@ -123,3 +123,21 @@ CREATE PROCEDURE [dbo].[retornarPuestos]
 		SELECT [Puesto].[NombreP] FROM [dbo].[Puesto];
 	END
 GO
+-------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------Nuevos Stored procedures--------------------------------------------------------------------------------------
+
+DROP PROCEDURE IF EXISTS [dbo].[borrarEmpleado];
+
+CREATE PROCEDURE [dbo].[PlanillasSemanales]
+
+AS
+
+SET NOCOUNT ON;
+
+	SELECT [PlanillaSemanaXEmpleado].[SalarioNeto], 
+	[PlanillaSemanaXEmpleado].[TotalDeducciones],
+	DATEDIFF(minute, [PlanillaSemana]., Fin) as [MinutosTranscurridos]
+	FROM [dbo].[PlanillaSemana] 
+	INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemana].[ID] = [PlanillaSemanaXEmpleado].[IdPlanillaSemana]
+	SET NOCOUNT OFF;
+END
