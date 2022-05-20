@@ -31,17 +31,6 @@ CREATE TABLE [dbo].[Jornada](
 ) ON [PRIMARY]
 GO
 
-CREATE TABLE [dbo].[Usuarios](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[Nombre] [varchar](16) NOT NULL,
-	[Password] [varchar](16) NOT NULL,
- CONSTRAINT [PK_usuarios] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-) ON [PRIMARY]
-GO
-
 CREATE TABLE [dbo].[TipoDocIdentidad](
 	[ID] [int] NOT NULL,
 	[NombreTip] [varchar](128) NOT NULL,
@@ -63,7 +52,7 @@ CREATE TABLE [dbo].[Departamentos](
 GO
 
 CREATE TABLE [dbo].[Puesto](
-	[ID] [int] IDENTITY(1,1)NOT NULL,
+	[ID] [int] NOT NULL,
 	[NombreP] [varchar](128) NOT NULL,
 	[SalarioXHora] [money] NOT NULL,
 	[Borrado] [bit] NOT NULL DEFAULT 1,
@@ -84,6 +73,8 @@ CREATE TABLE [dbo].[Obrero](
 	[IdDepartamento] [int] NOT NULL,
 	[Borrado] [bit] NOT NULL DEFAULT 1,
 	[IdJornada] [int] NOT NULL,
+	[Username][varchar](128) NOT NULL,
+	[Password][varchar](128) NOT NULL,
  CONSTRAINT [PK_Obrero] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -92,7 +83,7 @@ CREATE TABLE [dbo].[Obrero](
 GO
 
 CREATE TABLE [dbo].[Deducciones](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[IdObrero] [int] NOT NULL,
 	[IdTipoDeduccion] [int] NOT NULL,
 	[Monto] [money] NOT NULL,
@@ -105,7 +96,7 @@ CREATE TABLE [dbo].[Deducciones](
 GO
 
 CREATE TABLE [dbo].[Feriados](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Nombre] [varchar](128) NOT NULL,
 	[Fecha] [date] NOT NULL,
  CONSTRAINT [PK_Feriados] PRIMARY KEY CLUSTERED 
@@ -116,7 +107,7 @@ CREATE TABLE [dbo].[Feriados](
 GO
 
 CREATE TABLE [dbo].[MarcasDeAsistencia](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[ValorTipoDocu] [int] NOT NULL,
 	[HoraEntrada] [time](7) NOT NULL,
 	[HoraSalida] [time](7) NOT NULL,
@@ -128,7 +119,7 @@ CREATE TABLE [dbo].[MarcasDeAsistencia](
 GO
 
 CREATE TABLE [dbo].[Movimiento](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Fecha] [date] NOT NULL,
 	[Monto] [money] NOT NULL,
 	[IdPlanilla] [int] NOT NULL,
@@ -141,7 +132,7 @@ CREATE TABLE [dbo].[Movimiento](
 GO
 
 CREATE TABLE [dbo].[PlanillaMes](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[FechaInicio] [date] NOT NULL,
 	[FechaFinal] [date] NOT NULL,
 	[SalarioNeto] [money] NOT NULL,
@@ -155,7 +146,7 @@ CREATE TABLE [dbo].[PlanillaMes](
 GO
 
 CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[FechaInicio] [date] NOT NULL,
 	[FechaFinal] [date] NOT NULL,
 	[SalarioNeto] [money] NOT NULL,
@@ -172,7 +163,7 @@ CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
 GO
 
 CREATE TABLE [dbo].[PlanillaSemana](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[FechaInicio] [date] NOT NULL,
 	[FechaFinal] [date] NOT NULL,
 	[SalarioNeto] [money] NOT NULL,
@@ -185,7 +176,7 @@ CREATE TABLE [dbo].[PlanillaSemana](
 GO
 
 CREATE TABLE [dbo].[TipoDeduccion](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Nombre] [varchar](128) NOT NULL,
 	[Obligatorio] [varchar](128) NOT NULL,
 	[Porcentual] [varchar](128) NOT NULL,
@@ -198,7 +189,7 @@ CREATE TABLE [dbo].[TipoDeduccion](
 GO
 
 CREATE TABLE [dbo].[MovimientoDebito](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Fecha] [date] NOT NULL,
 	[Monto] [money] NOT NULL,
 	[IdDeduccion] [int] NOT NULL,
@@ -210,7 +201,7 @@ CREATE TABLE [dbo].[MovimientoDebito](
 GO
 
 CREATE TABLE [dbo].[TipoJornada](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[NombreJ] [varchar](128) NOT NULL,
 	[HoraEntrada] [time](7) NOT NULL,
 	[HoraSalida] [time](7) NOT NULL,
@@ -222,7 +213,7 @@ CREATE TABLE [dbo].[TipoJornada](
 GO
 
 CREATE TABLE [dbo].[TipoMovimiento](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Nombre] [varchar](128) NOT NULL,
  CONSTRAINT [PK_TipoMovimiento] PRIMARY KEY CLUSTERED 
 (
