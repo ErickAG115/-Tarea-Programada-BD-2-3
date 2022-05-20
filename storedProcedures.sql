@@ -136,8 +136,18 @@ SET NOCOUNT ON;
 
 	SELECT [PlanillaSemanaXEmpleado].[SalarioNeto], 
 	[PlanillaSemanaXEmpleado].[TotalDeducciones],
-	DATEDIFF(minute, [PlanillaSemana]., Fin) as [MinutosTranscurridos]
+	DATEDIFF(minute, [TipoJornada].[HoraEntrada], [TipoJornada].[HoraSalida])-DATEDIFF(minute, [MarcasDeAsistencia].[HoraEntrada], [MarcasDeAsistencia].[HoraSalida]) 
+	as [MinutosTranscurridos]
 	FROM [dbo].[PlanillaSemana] 
 	INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemana].[ID] = [PlanillaSemanaXEmpleado].[IdPlanillaSemana]
+	INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [PlanillaSemanaXEmpleado].[IdObrero]
+	INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
+	INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[ID] = [Jornada].[IdAsistencias]
+	INNER JOIN [dbo].[TipoJornada] ON [TipoJornada].[ID] = [Jornada].[TipoJornada]
 	SET NOCOUNT OFF;
 END
+
+
+--INSERT INTO [dbo].[MarcasDeAsistencia](ID,[ValorTipoDocu],[HoraEntrada],[HoraSalida]) VALUES(1,1,CAST ('10:00:00.0000000' AS TIME),CAST ('16:00:00.0000000' AS TIME))
+--INSERT INTO [dbo].[TipoJornada](ID,[NombreJ],[HoraEntrada],[HoraSalida]) VALUES(1,1,CAST ('10:00:00.0000000' AS TIME),CAST ('16:00:00.0000000' AS TIME))
+--INSERT INTO [dbo].[Jornada](ID,[TipoJornada],[IdAsistencias]) VALUES(1,1,1)
