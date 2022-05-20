@@ -96,6 +96,7 @@ CREATE TABLE [dbo].[Deducciones](
 	[IdObrero] [int] NOT NULL,
 	[IdTipoDeduccion] [int] NOT NULL,
 	[Monto] [money] NOT NULL,
+	[Fecha] [date] NULL,
  CONSTRAINT [PK_Deducciones] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -159,6 +160,7 @@ CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
 	[FechaFinal] [date] NOT NULL,
 	[SalarioNeto] [money] NOT NULL,
 	[TotalDeducciones] [int] NOT NULL,
+	[SalarioBruto] [money] NOT NULL,
 	[IdObrero] [int] NOT NULL,
 	[IdPlanillaMes] [int] NOT NULL,
 	[IdPlanillaSemana] [int] NOT NULL,
@@ -313,6 +315,13 @@ GO
 ALTER TABLE [dbo].[MovimientoDebito] CHECK CONSTRAINT [FK_MovimientoDebito_Deducciones]
 GO
 
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_Obrero] FOREIGN KEY([IdObrero])
+REFERENCES [dbo].[Obrero] ([ID])
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_Obrero]
+GO
+
 ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaMes] FOREIGN KEY([IdPlanillaMes])
 REFERENCES [dbo].[PlanillaMes] ([ID])
 GO
@@ -326,3 +335,4 @@ GO
 
 ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaSemana]
 GO
+
