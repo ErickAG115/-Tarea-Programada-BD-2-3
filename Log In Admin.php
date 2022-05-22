@@ -16,6 +16,7 @@ $connectionInfo = array('Database'=>'ProyectoBD');
 $conn = sqlsrv_connect($serverName, $connectionInfo);
 
 $user = $password = "";
+$sendU = "";
 $found = "false";
 ?>
 
@@ -41,6 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt = sqlsrv_query( $conn, $tsql);
         while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
             if($row['Nombre']==$user && $row['Password']==$password){
+                $sendU = $row['Nombre'];
                 $found="true";
             }
         }
@@ -48,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "El usuario o password son incorrectos";
         }
         else{
-            header("Location: http://localhost/php_program/Admin%20Controls.php");
+            header("Location: Admin Controls.php?user=$sendU");
             exit();
         }
     }

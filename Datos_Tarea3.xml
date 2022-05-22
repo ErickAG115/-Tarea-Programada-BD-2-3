@@ -33,9 +33,9 @@
         </Tipos_de_Documento_de_Identificacion>
 
         <TiposDeJornada>
-            <TipoDeJornada HoraEntrada="8:00 am" HoraSalida="4:00 pm" Id="1" Nombre="Diurna" />
-            <TipoDeJornada HoraEntrada="4:00 pm" HoraSalida="11:00 pm" Id="2" Nombre="Vespertina" />
-            <TipoDeJornada HoraEntrada="12:00 am" HoraSalida="6:00 am" Id="3" Nombre="Nocturna" />
+            <TipoDeJornada HoraEntrada="08:00 am" HoraSalida="04:00 pm" Id="1" Nombre="Diurna" />
+            <TipoDeJornada HoraEntrada="04:00 pm" HoraSalida="11:00 pm" Id="2" Nombre="Vespertina" />
+            <TipoDeJornada HoraEntrada="12:00 am" HoraSalida="06:00 am" Id="3" Nombre="Nocturna" />
         </TiposDeJornada>
 
         <TiposDeMovimiento>

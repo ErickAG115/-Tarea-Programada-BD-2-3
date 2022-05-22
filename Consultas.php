@@ -10,60 +10,34 @@
 
 <?php
 
+session_start();
 
 $serverName = 'ERICK';
 $connectionInfo = array('Database'=>'ProyectoBD');
 $conn = sqlsrv_connect($serverName, $connectionInfo);
+
+$Usuario = "";
+
+if(isset($_SESSION['Usuario']))
+    $Usuario = $_SESSION['Usuario'];
+
+if($_GET){
+  $Usuario = $_GET['user']; // print_r($_GET); //remember to add semicolon      
+}else{
+  $Usuario = $Usuario;
+}
+
+$_SESSION['Usuario'] = $Usuario;
 
 $name = $filtro = $insertPN = $insertPS = $nombreE = $puestoE = $tipoDocE = $valorDocE = $depE = $fechaE = $ID = "";
 
 
 ?>
 <div id="info" class="container">
-<h1>Admin Controls</h1>
+<h1>Consulta de Planillas</h1>
 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>"> 
-  <h3>Listado y Edicion</h3>
-  <input type="submit" name="submit" value="Listar Puestos">
-  <br><br>
-  <input type="submit" name="submit" value="Listar Empleados">
-  <br><br>
-  <input type="submit" name="submit" value="Editar Puestos">
-  <br><br>
-  <input type="submit" name="submit" value="Editar Empleados">
-  <br><br>
-  Listar Empleados (Nombre): <input type="text" name="filtroN" value="<?php echo $filtro;?>">
-  <input type="submit" name="submit" value="Listar Filtro">
-  <br><br>
-  <h3>Borrar</h3>
-  ID Empleado: <input type="number" name="IDE" value="<?php echo $insertPN;?>">
-  <br><br>
-  <input type="submit" name="submit" value="Borrar Empleado">
-  <br><br>
-  ID Puesto: <input type="number" name="IDP" value="<?php echo $insertPN;?>">
-  <br><br>
-  <input type="submit" name="submit" value="Borrar Puesto">
-  <br><br>
-  <h3>Insertar Nuevo Puesto</h3>
-  Nombre: <input type="text" name="namePI" value="<?php echo $insertPN;?>">
-  <br><br>
-  Salario por Hora: <input type="number" name="pricePI" value="<?php echo $insertPS;?>">
-  <br><br>
-  <input type="submit" name="submit" value="Insertar Puesto">
-  <br><br>
-  <h3>Insertar Nuevo Empleado</h3>
-  Nombre: <input type="text" name="nameEI" value="<?php echo $nombreE;?>">
-  <br><br>
-  Tipo Doc.Identidad: <input type="number" name="tipoEI" value="<?php echo $tipoDocE;?>">
-  <br><br>
-  Valor Identidad: <input type="number" name="valorEI" value="<?php echo $valorDocE;?>">
-  <br><br>
-  Puesto: <input type="text" name="puestoEI" value="<?php echo $puestoE;?>">
-  <br><br>
-  Fecha de Nacimiento: <input type="text" name="fechaEI" value="<?php echo $fechaE;?>">
-  <br><br>
-  ID de Departamento: <input type="number" name="depEI" value="<?php echo $depE;?>">
-  <br><br>
-  <input type="submit" name="submit" value="Insertar Empleado">
+  <input type="submit" name="submit" value="Planillas Semanales">
+  <input type="submit" name="submit" value="Planillas Mensuales">
   <br><br>
   <h3>Salir</h3>
   <input type="submit" name="submit" value="Log Off">
