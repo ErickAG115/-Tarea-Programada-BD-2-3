@@ -110,8 +110,8 @@ GO
 CREATE TABLE [dbo].[MarcasDeAsistencia](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[ValorTipoDocu] [int] NOT NULL,
-	[HoraEntrada] [datetime] NOT NULL,
-	[HoraSalida] [datetime] NOT NULL,
+	[FechaEntrada] [datetime] NOT NULL,
+	[FechaSalida] [datetime] NOT NULL,
 	[IdJornada][int] NOT NULL,
  CONSTRAINT [PK_MarcasDeAsistencia] PRIMARY KEY CLUSTERED 
 (
