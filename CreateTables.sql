@@ -54,7 +54,7 @@ CREATE TABLE [dbo].[Puesto](
 GO
 
 CREATE TABLE [dbo].[Usuarios](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1)NOT NULL,
 	[UserName] [varchar](128) NOT NULL,
 	[Passowrd] [varchar](128) NOT NULL,
 	[EsAdmin] [bit] NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE [dbo].[MarcasDeAsistencia](
 	[ValorTipoDocu] [int] NOT NULL,
 	[HoraEntrada] [datetime] NOT NULL,
 	[HoraSalida] [datetime] NOT NULL,
-	[IdTipoJornada][int] NOT NULL,
+	[IdJornada][int] NOT NULL,
  CONSTRAINT [PK_MarcasDeAsistencia] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -143,6 +143,8 @@ CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
 	[SalarioTotal] [money] NOT NULL,
 	[TotalDeducciones] [int] NOT NULL,
 	[IdObrero] [int] NOT NULL,
+	[IdMes] [int] NOT NULL,
+	[IdJornada][int] NOT NULL,
  CONSTRAINT [PK_PlanillaSemanaXEmpleado] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -170,6 +172,16 @@ CREATE TABLE [dbo].[MovimientoDebito](
 	[IdDeduccion] [int] NOT NULL,
 	[IdTipoMov][int] NOT NULL,
  CONSTRAINT [PK_MovimientoDebito] PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[Jornada](
+	[ID] [int] NOT NULL,
+	[IdTipoJornada] [int] NOT NULL,
+ CONSTRAINT [PK_Jornada] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
@@ -212,11 +224,11 @@ GO
 ALTER TABLE [dbo].[Deducciones] CHECK CONSTRAINT [FK_Deducciones_TipoDeduccion]
 GO
 
-ALTER TABLE [dbo].[MarcasDeAsistencia]  WITH CHECK ADD  CONSTRAINT [FK_MarcasDeAsistencia_TipoJornada] FOREIGN KEY([IdTipoJornada])
-REFERENCES [dbo].[TipoJornada] ([ID])
+ALTER TABLE [dbo].[MarcasDeAsistencia]  WITH CHECK ADD  CONSTRAINT [FK_MarcasDeAsistencia_Jornada] FOREIGN KEY([IdJornada])
+REFERENCES [dbo].[Jornada] ([ID])
 GO
 
-ALTER TABLE [dbo].[MarcasDeAsistencia] CHECK CONSTRAINT [FK_MarcasDeAsistencia_TipoJornada]
+ALTER TABLE [dbo].[MarcasDeAsistencia] CHECK CONSTRAINT [FK_MarcasDeAsistencia_Jornada]
 GO
 
 
@@ -269,11 +281,11 @@ GO
 ALTER TABLE [dbo].[Obrero] CHECK CONSTRAINT [FK_Obrero_TipoDocIdentidad]
 GO
 
-ALTER TABLE [dbo].[Obrero]  WITH CHECK ADD  CONSTRAINT [FK_Obrero_TipoJornada] FOREIGN KEY([IdJornada])
-REFERENCES [dbo].[TipoJornada] ([ID])
+ALTER TABLE [dbo].[Obrero]  WITH CHECK ADD  CONSTRAINT [FK_Obrero_Jornada] FOREIGN KEY([IdJornada])
+REFERENCES [dbo].[Jornada] ([ID])
 GO
 
-ALTER TABLE [dbo].[Obrero] CHECK CONSTRAINT [FK_Obrero_TipoJornada]
+ALTER TABLE [dbo].[Obrero] CHECK CONSTRAINT [FK_Obrero_Jornada]
 GO
 
 ALTER TABLE [dbo].[PlanillaMesXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaMesXEmpleado_Obrero] FOREIGN KEY([IdObrero])
@@ -283,6 +295,13 @@ GO
 ALTER TABLE [dbo].[PlanillaMesXEmpleado] CHECK CONSTRAINT [FK_PlanillaMesXEmpleado_Obrero]
 GO
 
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaMesXEmpleado] FOREIGN KEY([IdMes])
+REFERENCES [dbo].[PlanillaMesXEmpleado] ([ID])
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_PlanillaMesXEmpleado]
+GO
+
 ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_Obrero] FOREIGN KEY([IdObrero])
 REFERENCES [dbo].[Obrero] ([ID])
 GO
@@ -290,10 +309,24 @@ GO
 ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_Obrero]
 GO
 
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado]  WITH CHECK ADD  CONSTRAINT [FK_PlanillaSemanaXEmpleado_Jornada] FOREIGN KEY([IdJornada])
+REFERENCES [dbo].[Jornada] ([ID])
+GO
+
+ALTER TABLE [dbo].[PlanillaSemanaXEmpleado] CHECK CONSTRAINT [FK_PlanillaSemanaXEmpleado_Jornada]
+GO
+
 ALTER TABLE [dbo].[Usuarios]  WITH CHECK ADD  CONSTRAINT [FK_Usuarios_Obrero] FOREIGN KEY([IdObrero])
 REFERENCES [dbo].[Obrero] ([ID])
 GO
 
 ALTER TABLE [dbo].[Usuarios] CHECK CONSTRAINT [FK_Usuarios_Obrero]
+GO
+
+ALTER TABLE [dbo].[Jornada]  WITH CHECK ADD  CONSTRAINT [FK_Jornada_TipoJornada] FOREIGN KEY([IdTipoJornada])
+REFERENCES [dbo].[TipoJornada] ([ID])
+GO
+
+ALTER TABLE [dbo].[Jornada] CHECK CONSTRAINT [FK_Jornada_TipoJornada]
 GO
 
