@@ -14,6 +14,7 @@ CREATE TABLE [dbo].[MovimientoCredito](
 	[Monto] [money] NOT NULL,
 	[IdAsistencia] [int] NOT NULL,
 	[IdTipoMov][int] NOT NULL,
+	[Horas][int] NOT NULL,
  CONSTRAINT [PK_MovimientoCredito] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -45,7 +46,7 @@ CREATE TABLE [dbo].[Puesto](
 	[ID] [int] NOT NULL,
 	[NombreP] [varchar](128) NOT NULL,
 	[SalarioXHora] [money] NOT NULL,
-	[Borrado] [bit] NOT NULL DEFAULT 1,
+	[Borrado] [bit] NOT NULL DEFAULT 0,
  CONSTRAINT [PK_Puesto] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -56,7 +57,7 @@ GO
 CREATE TABLE [dbo].[Usuarios](
 	[ID] [int] IDENTITY(1,1)NOT NULL,
 	[UserName] [varchar](128) NOT NULL,
-	[Passowrd] [varchar](128) NOT NULL,
+	[Password] [varchar](128) NOT NULL,
 	[EsAdmin] [bit] NOT NULL,
 	[IdObrero] [int] NOT NULL,
  CONSTRAINT [PK_Usuarios] PRIMARY KEY CLUSTERED 
@@ -74,7 +75,7 @@ CREATE TABLE [dbo].[Obrero](
 	[IdPuesto] [int] NOT NULL,
 	[FechaNacimiento] [date] NOT NULL,
 	[IdDepartamento] [int] NOT NULL,
-	[Borrado] [bit] NOT NULL DEFAULT 1,
+	[Borrado] [bit] NOT NULL DEFAULT 0,
 	[IdJornada] [int] NOT NULL,
  CONSTRAINT [PK_Obrero] PRIMARY KEY CLUSTERED 
 (
@@ -89,6 +90,7 @@ CREATE TABLE [dbo].[Deducciones](
 	[IdTipoDeduccion] [int] NOT NULL,
 	[Monto] [money] NOT NULL,
 	[Fecha] [date] NULL,
+	[Activa] [bit] NOT NULL DEFAULT 0,
  CONSTRAINT [PK_Deducciones] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
@@ -179,7 +181,7 @@ CREATE TABLE [dbo].[MovimientoDebito](
 GO
 
 CREATE TABLE [dbo].[Jornada](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[IdTipoJornada] [int] NOT NULL,
  CONSTRAINT [PK_Jornada] PRIMARY KEY CLUSTERED 
 (
@@ -191,8 +193,8 @@ GO
 CREATE TABLE [dbo].[TipoJornada](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[NombreJ] [varchar](128) NOT NULL,
-	[HoraEntrada] [time](7) NOT NULL,
-	[HoraSalida] [time](7) NOT NULL,
+	[HoraEntrada] [time] NOT NULL,
+	[HoraSalida] [time] NOT NULL,
  CONSTRAINT [PK_TipoJornada] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC
