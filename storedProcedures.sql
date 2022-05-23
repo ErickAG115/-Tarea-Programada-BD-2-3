@@ -130,27 +130,48 @@ DROP PROCEDURE IF EXISTS [dbo].[borrarEmpleado];
 
 CREATE PROCEDURE [dbo].[PlanillasSemanales] @inIdUsuario INT
 
-AS
+AS BEGIN
+	SET NOCOUNT ON;
+		
+		SELECT [TipoMovimiento].[Nombre] as 'TipoJornada',
+		[PlanillaSemanaXEmpleado].[SalarioTotal],
+		[PlanillaSemanaXEmpleado].[TotalDeducciones], 
+		[PlanillaSemanaXEmpleado].[SalarioNeto],
+		[MovimientoCredito].[Horas]
+		FROM [dbo].[Usuarios] 
+		INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+		INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
+		INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
+		INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
+		INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
+		INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
+		WHERE @inIdUsuario = [Usuarios].[ID] 
+		GROUP BY [TipoMovimiento].[Nombre]
+		SET NOCOUNT OFF;
+	END
+GO
 
-SET NOCOUNT ON;
-
-	SELECT [PlanillaSemanaXEmpleado].[SalarioTotal],
-	[PlanillaSemanaXEmpleado].[TotalDeducciones], 
-	[PlanillaSemanaXEmpleado].[SalarioNeto],
-	[MovimientoCredito].[Horas],
-	[TipoMovimiento].[Nombre]
-	FROM [dbo].[Usuarios] 
-	INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-	INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
-	INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
-	INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
-	INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
-	INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
-	WHERE @inIdUsuario = [Usuarios].[ID];
-	SET NOCOUNT OFF;
-END
+-------------------------------------------------------------------------------------------------------------------------------
 
 
---INSERT INTO [dbo].[MarcasDeAsistencia](ID,[ValorTipoDocu],[HoraEntrada],[HoraSalida]) VALUES(1,1,CAST ('10:00:00.0000000' AS TIME),CAST ('16:00:00.0000000' AS TIME))
---INSERT INTO [dbo].[TipoJornada](ID,[NombreJ],[HoraEntrada],[HoraSalida]) VALUES(1,1,CAST ('10:00:00.0000000' AS TIME),CAST ('16:00:00.0000000' AS TIME))
---INSERT INTO [dbo].[Jornada](ID,[TipoJornada],[IdAsistencias]) VALUES(1,1,1)
+DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMonto];
+
+CREATE PROCEDURE [dbo].[DeduccionesMonto] @inIdUsuario INT
+
+AS BEGIN
+	SET NOCOUNT ON;
+		
+		SELECT [TipoDeduccion].[Nombre],
+		[TipoDeduccion].[Porcentual],
+		[Deducciones].[Monto]
+		FROM [dbo].[Usuarios] 
+		INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+		INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
+		INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
+		INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
+		WHERE @inIdUsuario = [Usuarios].[ID] 
+		SET NOCOUNT OFF;
+	END
+GO
+
+EXEC [DeduccionesMonto] @inIdUsuario = 1
