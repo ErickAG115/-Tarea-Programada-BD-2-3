@@ -128,22 +128,25 @@ GO
 
 DROP PROCEDURE IF EXISTS [dbo].[borrarEmpleado];
 
-CREATE PROCEDURE [dbo].[PlanillasSemanales]
+CREATE PROCEDURE [dbo].[PlanillasSemanales] @inIdUsuario INT
 
 AS
 
 SET NOCOUNT ON;
 
-	SELECT [PlanillaSemanaXEmpleado].[SalarioNeto], 
-	[PlanillaSemanaXEmpleado].[TotalDeducciones],
-	DATEDIFF(minute, [TipoJornada].[HoraEntrada], [TipoJornada].[HoraSalida])-DATEDIFF(minute, [MarcasDeAsistencia].[HoraEntrada], [MarcasDeAsistencia].[HoraSalida]) 
-	as [MinutosTranscurridos]
-	FROM [dbo].[PlanillaSemana] 
-	INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemana].[ID] = [PlanillaSemanaXEmpleado].[IdPlanillaSemana]
-	INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [PlanillaSemanaXEmpleado].[IdObrero]
+	SELECT [PlanillaSemanaXEmpleado].[SalarioTotal],
+	[PlanillaSemanaXEmpleado].[TotalDeducciones], 
+	[PlanillaSemanaXEmpleado].[SalarioNeto],
+	[MovimientoCredito].[Horas],
+	[TipoMovimiento].[Nombre]
+	FROM [dbo].[Usuarios] 
+	INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
 	INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
-	INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[ID] = [Jornada].[IdAsistencias]
-	INNER JOIN [dbo].[TipoJornada] ON [TipoJornada].[ID] = [Jornada].[TipoJornada]
+	INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
+	INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
+	INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
+	INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
+	WHERE @inIdUsuario = [Usuarios].[ID];
 	SET NOCOUNT OFF;
 END
 
