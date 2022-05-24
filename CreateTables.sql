@@ -9,7 +9,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[MovimientoCredito](
-	[ID] [int] NOT NULL,
+	[ID] [int] IDENTITY (1,1) NOT NULL,
 	[Fecha] [date] NOT NULL,
 	[Monto] [money] NOT NULL,
 	[IdAsistencia] [int] NOT NULL,
@@ -155,7 +155,7 @@ CREATE TABLE [dbo].[PlanillaSemanaXEmpleado](
 GO
 
 CREATE TABLE [dbo].[TipoDeduccion](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[ID] [int] NOT NULL,
 	[Nombre] [varchar](128) NOT NULL,
 	[Obligatorio] [varchar](128) NOT NULL,
 	[Porcentual] [varchar](128) NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE [dbo].[Jornada](
 GO
 
 CREATE TABLE [dbo].[TipoJornada](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[ID] [int] NOT NULL,
 	[NombreJ] [varchar](128) NOT NULL,
 	[HoraEntrada] [time] NOT NULL,
 	[HoraSalida] [time] NOT NULL,
@@ -203,7 +203,7 @@ CREATE TABLE [dbo].[TipoJornada](
 GO
 
 CREATE TABLE [dbo].[TipoMovimiento](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[ID] [int] NOT NULL,
 	[Nombre] [varchar](128) NOT NULL,
  CONSTRAINT [PK_TipoMovimiento] PRIMARY KEY CLUSTERED 
 (

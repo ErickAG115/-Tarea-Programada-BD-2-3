@@ -29,10 +29,15 @@ DECLARE @EliminarDeducciones TABLE (ID INT IDENTITY(1,1),IdTipoDec INT, valorDoc
 
 DECLARE @asistencias TABLE (ID INT IDENTITY(1,1), ValorDocIdentidad VARCHAR(64), Entrada DATETIME, Salida DATETIME)
 
-DECLARE @NuevosHorarios TABLE (ID INT IDENTITY(1,1), IdJornada INT, ValorDocIdentidad INT)
+DECLARE @NuevosHorarios TABLE (ID INT IDENTITY(1,1), IdJornada INT, ValorDocIdenT INT)
+
+DECLARE @DeduccionesObrero TABLE (ID INT IDENTITY(1,1),Monto MONEY,Porcentaje FLOAT, Porcentual VARCHAR(128), IdDed INT,Obligatorio INT)
+
 
 DECLARE @lo INT
 DECLARE @hi INT
+DECLARE @EntradaF SMALLDATETIME
+DECLARE @SalidaF SMALLDATETIME
 DECLARE @Entrada TIME
 DECLARE @Salida TIME
 DECLARE @ValorDocIdentidad INT
@@ -51,6 +56,16 @@ DECLARE @SalarioXHora INT
 DECLARE @Dobles BIT = 0
 DECLARE @EsJueves BIT
 DECLARE @EsFinMes BIT
+DECLARE @Deduccion INT
+DECLARE @MAXDeduccion INT
+DECLARE @SalarioNeto INT
+DECLARE @Porcentual VARCHAR(128)
+DECLARE @PrimerJID INT
+DECLARE @FinalJID INT
+DECLARE @JornadaSS INT
+DECLARE @TJornadaSS INT
+DECLARE @ObreroSS INT
+DECLARE @ValorDocuSS INT
 
 INSERT @Fechas (FechaOperacion)
 SELECT T.Item.value('@Fecha', 'DATE')
@@ -73,11 +88,19 @@ SELECT 3
 
 WHILE (@FechaItera<=@FechaFin)
 BEGIN
+	
+	DELETE FROM @EmpleadosInsertar
+	DELETE FROM @EmpleadosBorrar
+	DELETE FROM @InsertarDeducciones
+	DELETE FROM @EliminarDeducciones
+	DELETE FROM @asistencias
+	DELETE FROM @NuevosHorarios
+	
 	INSERT @EmpleadosInsertar (FechaNacimiento, Nombre, Passwrd, UserName, valorDocuIdent, IdDepartamento, IdPuesto, IdTipoDocu)
 	SELECT 
 		T.Item.value('@FechaNacimiento', 'DATE'),
 		T.Item.value('@Nombre', 'VARCHAR(128)'),
-		T.Item.value('@Passowrd', 'VARCHAR(128)'),
+		T.Item.value('@Password', 'VARCHAR(128)'),
 		T.Item.value('@Username', 'VARCHAR(128)'),
 		T.Item.value('@ValorDocumentoIdentidad', 'INT'),
 		T.Item.value('@idDepartamento', 'INT'),
@@ -97,7 +120,7 @@ BEGIN
 		T.Item.value('@ValorDocumentoIdentidad', 'INT')
 	FROM @xmlData.nodes('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/AsociaEmpleadoConDeduccion') as T(Item)
 	
-	INSERT @EliminarDeducciones (ID, valorDocuIdent)
+	INSERT @EliminarDeducciones (IdTipoDec, valorDocuIdent)
 	SELECT 
 		T.Item.value('@IdDeduccion', 'INT'),
 		T.Item.value('@ValorDocumentoIdentidad', 'INT')
@@ -105,12 +128,12 @@ BEGIN
 
 	INSERT @asistencias (ValorDocIdentidad, Entrada, Salida)
 	SELECT 
-		T.Item.value('@FechaEntrada', 'DATETIME'),
-		T.Item.value('@FechaSalida', 'DATETIME'),
-		T.Item.value('@ValorDocumentoIdentidad', 'INT')
+		T.Item.value('@ValorDocumentoIdentidad', 'INT'),
+		T.Item.value('@FechaEntrada', 'SMALLDATETIME'),
+		T.Item.value('@FechaSalida', 'SMALLDATETIME')
 	FROM @xmlData.nodes('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/MarcaDeAsistencia') as T(Item)
 	
-	INSERT @NuevosHorarios (IdJornada, ValorDocIdentidad)
+	INSERT @NuevosHorarios (IdJornada, ValorDocIdent)
 	SELECT
 		T.Item.value('@IdJornada', 'INT'),
 		T.Item.value('@ValorDocumentoIdentidad', 'INT')
@@ -134,10 +157,10 @@ BEGIN
 			FROM @EmpleadosInsertar EI
 			INNER JOIN dbo.Obrero O ON EI.valorDocuIdent=O.ValorDocIdentidad
 		
-		INSERT INTO dbo.PlanillaSemanaXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero,IdMes,IdJornada)
-		VALUES(
+		INSERT dbo.PlanillaSemanaXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero,IdMes,IdJornada)
+		SELECT
 			(@FechaItera),
-			(EOMONTH(@FechaItera)),
+			(DATEADD(day, 6, @FechaItera)),
 			(0),
 			(0),
 			(0),
@@ -146,17 +169,16 @@ BEGIN
 			INNER JOIN dbo.Obrero O ON EI.valorDocuIdent=O.ValorDocIdentidad),
 			(SELECT M.ID
 			FROM dbo.PlanillaMesXEmpleado M
-			WHERE (@FechaItera BETWEEN M.FechaInicio and M.FechaFinal)),
-			(SELECT O.IdJornada
-			FROM @EmpleadosInsertar EI
-			INNER JOIN dbo.Obrero O ON EI.valorDocuIdent=O.ValorDocIdentidad)
-			)
+			INNER JOIN dbo.Obrero O ON M.IdObrero = O.ID
+			WHERE (@FechaItera BETWEEN M.FechaInicio AND M.FechaFinal) AND M.IdObrero = O.ID),
+			(1)
+			
+		INSERT dbo.Usuarios (UserName, Password, EsAdmin, IdObrero)
+		SELECT EXML.UserName, EXML.Passwrd, 0, O.Id
+		FROM @EmpleadosInsertar EXML
+		INNER JOIN dbo.Obrero O ON EXML.valorDocuIdent=O.ValorDocIdentidad
+
 	END
-	-- el mapeo entre usuarios y empleado, al insertar usuarios sera por ValorDocIdentidad
-	INSERT dbo.Usuarios (UserName, Password, EsAdmin, IdObrero)
-	SELECT EXML.UserName, EXML.Passwrd, 0, O.Id
-	FROM @EmpleadosInsertar EXML
-	INNER JOIN dbo.Obrero O ON EXML.valorDocuIdent=O.ValorDocIdentidad
 
 	IF @xmlData.exist('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/AsociaEmpleadoConDeduccion') = 1
 	BEGIN
@@ -192,7 +214,13 @@ BEGIN
 	
 		WHILE (@lo<=@hi)
 		BEGIN
+			SET @SalarioNeto = 0
+
 			SELECT @Entrada=A.Entrada, @Salida=A.Salida, @ValorDocIdentidad=A.ValorDocIdentidad
+			FROM @asistencias A
+			WHERE A.ID=@lo;
+
+			SELECT @EntradaF=A.Entrada, @SalidaF=A.Salida, @ValorDocIdentidad=A.ValorDocIdentidad
 			FROM @asistencias A
 			WHERE A.ID=@lo;
 		
@@ -248,25 +276,71 @@ BEGIN
 					--- determinar horas extraordinarias dobles  y monto
 					SET @montoGanadoHD = (@horasDobles*@SalarioXHora)*2;
 								
-				END 
-				ELSE 
-				BEGIN
-					--- determinar horas extraordinarias normales y moto
-					SET @montoGanadoHE = (@horasDobles*@SalarioXHora)*1.5;
+					END 
+					ELSE 
+					BEGIN
+						--- determinar horas extraordinarias normales y moto
+						SET @montoGanadoHE = (@horasDobles*@SalarioXHora)*1.5;
 							
+					END
 				END
-			
 				SET @EsJueves = 0
 				IF (DATENAME(WEEKDAY,@FechaItera)='Thursday')
 				BEGIN
-				  SET @EsJueves = 1
-			  
-					
-			  
-				  -- calcular deducciones no obligatorias
+					SET @EsJueves = 1
 
+					INSERT @DeduccionesObrero (Monto,Porcentaje,Porcentual,IdDed,Obligatorio)
+					SELECT
+						D.Monto,
+						TD.Valor,
+						TD.Porcentual,
+						D.ID,
+						4
+						FROM dbo.Deducciones D
+						INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
+						WHERE D.IdObrero = @idempleado AND TD.Obligatorio = 'Si' AND D.Activa = 1
+
+					 INSERT @DeduccionesObrero (Monto,Porcentaje,Porcentual,IdDed,Obligatorio)
+					SELECT
+						D.Monto,
+						TD.Valor,
+						TD.Porcentual,
+						D.ID,
+						5
+						FROM dbo.Deducciones D
+						INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
+						WHERE D.IdObrero = @idempleado AND TD.Obligatorio = 'No' AND D.Activa = 1
+
+				SELECT @Deduccion = MIN(DO.ID) FROM @DeduccionesObrero DO
+				SELECT @MAXDeduccion = MAX(DO.ID) FROM @DeduccionesObrero DO
+
+				SELECT @SalarioNeto = S.SalarioTotal + @montoGanadoHO+@montoGanadoHE+@montoGanadoHD
+				FROM dbo.PlanillaSemanaXEmpleado S
+				WHERE S.IdObrero = @idempleado
+
+				WHILE (@Deduccion<=@MAXDeduccion)
+				BEGIN
+					SELECT @Porcentual = DO.Porcentual
+					FROM @DeduccionesObrero DO
+					WHERE DO.ID = @Deduccion
+
+					IF @Porcentual = 'Si'
+					BEGIN
+						SELECT @SalarioNeto = @SalarioNeto-(@SalarioNeto*DO.Porcentaje)
+						FROM @DeduccionesObrero DO
+						WHERE DO.ID = @Deduccion
+					END
+
+					ELSE
+					BEGIN
+						SELECT @SalarioNeto = @SalarioNeto-DO.Monto
+						FROM @DeduccionesObrero DO
+						WHERE DO.ID = @Deduccion
+					END
+
+					SET @Deduccion = @Deduccion+1
 				END
-			
+			END
 				SET @EsFinMes=0
 				IF (@FechaItera = EOMONTH(@FechaItera))
 				BEGIN
@@ -275,7 +349,7 @@ BEGIN
 			
 				BEGIN TRANSACTION
 					INSERT dbo.MarcasDeAsistencia(ValorTipoDocu,FechaEntrada,FechaSalida,IdJornada)
-					SELECT @ValorDocIdentidad,@Entrada,@Salida,O.IdJornada
+					SELECT @ValorDocIdentidad,@EntradaF,@SalidaF,O.IdJornada
 					FROM dbo.Obrero O
 					WHERE @ValorDocIdentidad = O.ValorDocIdentidad
 				
@@ -299,27 +373,143 @@ BEGIN
 						SELECT @FechaItera, @montoGanadoHE, MAX(A.ID),2,@horasDobles
 						FROM dbo.MarcasDeAsistencia A
 					END
-				
-					IF @EsJueves = 1
-					BEGIN
-						-- insertar movimientos de deduccion
-						-- Cear instancia en semanaplanilla
-						-- actualizar planillaxmesxemp
-					END
-				
+					
 					If @EsFinMes = 1
 					BEGIN
-						-- crear instancia de PlanillaxMesxEmp
+						
+						INSERT dbo.PlanillaMesXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero)
+						SELECT
+							DATEADD(day, 1, @FechaItera),
+							EOMONTH(DATEADD(day, 1, @FechaItera)),
+							0,
+							0,
+							0,
+							@idEmpleado
+
 					END
-				
+
+					IF @EsJueves = 1
+					BEGIN
+						SELECT @Deduccion = MIN(DO.ID) FROM @DeduccionesObrero DO
+						SELECT @MAXDeduccion = MAX(DO.ID) FROM @DeduccionesObrero DO
+
+						WHILE (@Deduccion<=@MAXDeduccion)
+						BEGIN
+							INSERT dbo.MovimientoDebito (Fecha, Monto, IdDeduccion, IdTipoMov)
+							SELECT
+								@FechaItera,
+								DO.Monto,
+								DO.IdDed,
+								DO.Obligatorio
+								FROM @DeduccionesObrero DO
+								WHERE DO.ID = @Deduccion
+							SET @Deduccion = @Deduccion+1
+
+							UPDATE PlanillaSemanaXEmpleado
+							SET TotalDeducciones=TotalDeducciones+1
+							WHERE IdObrero = @idempleado AND @FechaItera BETWEEN FechaInicio AND FechaFinal
+						END
+
+
+						INSERT dbo.PlanillaSemanaXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero,IdMes,IdJornada)
+						SELECT
+							(DATEADD(day, 1, @FechaItera)),
+							(DATEADD(day, 7, @FechaItera)),
+							(0),
+							(0),
+							(0),
+							(@idempleado),
+							(SELECT M.ID
+							FROM dbo.PlanillaMesXEmpleado M
+							WHERE (@FechaItera BETWEEN M.FechaInicio AND M.FechaFinal) AND (IdObrero=@idempleado)),
+							(SELECT O.IdJornada
+							FROM dbo.Obrero O
+							WHERE O.ValorDocIdentidad = @ValorDocIdentidad)
+							
+						
+						UPDATE dbo.PlanillaMesXEmpleado
+						SET TotalDeducciones=M.TotalDeducciones+S.TotalDeducciones, 
+							SalarioTotal = M.SalarioTotal+(S.SalarioTotal+@montoGanadoHO+@montoGanadoHE+@montoGanadoHD),
+							SalarioNeto = M.SalarioNeto+S.SalarioNeto
+						FROM dbo.PlanillaSemanaXEmpleado S
+						INNER JOIN dbo.PlanillaMesXEmpleado M ON S.IdMes = M.ID 
+						WHERE S.IdObrero = @idempleado AND S.FechaInicio BETWEEN M.FechaInicio AND M.FechaFinal
+
+					END
+					
+					UPDATE dbo.PlanillaSemanaXEmpleado
+					SET SalarioNeto = @SalarioNeto
+					WHERE IdObrero = @idempleado
+
 					UPDATE dbo.PlanillaSemanaXEmpleado
 					SET SalarioTotal=SalarioTotal + @montoGanadoHO+@montoGanadoHE+@montoGanadoHD
 					WHERE IdObrero=@idEmpleado and @FechaItera BETWEEN FechaInicio and FechaFinal
 			
 				COMMIT TRANSACTION
+			SET @lo = @lo +1 
+			DELETE FROM @DeduccionesObrero
+			SET @Dobles = 0
+			SET @montoGanadoHO = 0
+			SET @montoGanadoHD = 0
+			SET @montoGanadoHE = 0
 		END
 	END
+	IF @xmlData.exist('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/TipoDeJornadaProximaSemana') = 1
+	BEGIN
+		INSERT dbo.Jornada (IdTipoJornada)
+		SELECT 1
+		INSERT dbo.Jornada (IdTipoJornada)
+		SELECT 2
+		INSERT dbo.Jornada (IdTipoJornada)
+		SELECT 3
 
+		SELECT @PrimerJID = MIN(NH.ID) FROM @NuevosHorarios NH
+		SELECT @FinalJID = MAX(NH.ID) FROM @NuevosHorarios NH
 
+		WHILE(@PrimerJID<=@FinalJID)
+		BEGIN
 
+			SELECT @ValorDocuSS = NH.ValorDocIdenT 
+			FROM @NuevosHorarios NH
+			WHERE  NH.ID = @PrimerJID
+
+			SELECT @ObreroSS = O.ID 
+			FROM dbo.Obrero O
+			WHERE O.ID = @ValorDocuSS
+
+			SELECT @TJornadaSS = NH.IdJornada 
+			FROM @NuevosHorarios NH
+			WHERE  NH.ID = @PrimerJID
+
+			SELECT @JornadaSS = MAX(J.ID)
+			FROM dbo.Jornada J
+			WHERE J.IdTipoJornada = @TJornadaSS
+
+			UPDATE dbo.Obrero
+			SET IdJornada = @JornadaSS
+			WHERE ID = @ObreroSS
+
+			UPDATE dbo.PlanillaSemanaXEmpleado
+			SET IdJornada = @JornadaSS
+			WHERE IdObrero = @ObreroSS AND @FechaItera BETWEEN FechaInicio AND FechaFinal
+
+			SET @PrimerJID = @PrimerJID+1
+
+		END
+	END
+	IF @xmlData.exist('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/EliminarEmpleado') = 1
+	BEGIN
+		UPDATE dbo.Obrero
+		SET Borrado = 1
+		FROM @EmpleadosBorrar EB
+		WHERE EB.ValorDocuId = ValorDocIdentidad
+	END
+	DELETE FROM @asistencias
+	DELETE FROM @EmpleadosBorrar
+	DELETE FROM @EliminarDeducciones
+	DELETE FROM @NuevosHorarios
+	DELETE FROM @EmpleadosInsertar
+	DELETE FROM @InsertarDeducciones
+	SET @FechaItera = DATEADD(day, 1, @FechaItera)
+	
 END

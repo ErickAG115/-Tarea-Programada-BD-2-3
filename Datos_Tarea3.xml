@@ -12,7 +12,7 @@
             <Puesto Id="8" Nombre="Importacions y Exportaciones" SalarioXHora="2100"/>
             <Puesto Id="9" Nombre="Auxiliar de Materiales" SalarioXHora="1000"/>
             <Puesto Id="10" Nombre="Lider de produccion" SalarioXHora="1800"/>
-            <Puesto Id="10" Nombre="Asistente de produccion" SalarioXHora="1200"/>
+            <Puesto Id="11" Nombre="Asistente de produccion" SalarioXHora="1200"/>
         </Puestos>
 
 
