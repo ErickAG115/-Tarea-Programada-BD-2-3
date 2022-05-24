@@ -126,52 +126,128 @@ GO
 -------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------Nuevos Stored procedures--------------------------------------------------------------------------------------
 
-DROP PROCEDURE IF EXISTS [dbo].[borrarEmpleado];
+DROP PROCEDURE IF EXISTS [dbo].[PlanillasSemanales];
 
 CREATE PROCEDURE [dbo].[PlanillasSemanales] @inIdUsuario INT
 
-AS BEGIN
-	SET NOCOUNT ON;
+	AS BEGIN
+		SET NOCOUNT ON;
 		
-		SELECT [TipoMovimiento].[Nombre] as 'TipoJornada',
-		[PlanillaSemanaXEmpleado].[SalarioTotal],
-		[PlanillaSemanaXEmpleado].[TotalDeducciones], 
-		[PlanillaSemanaXEmpleado].[SalarioNeto],
-		[MovimientoCredito].[Horas]
-		FROM [dbo].[Usuarios] 
-		INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-		INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
-		INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
-		INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
-		INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
-		INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
-		WHERE @inIdUsuario = [Usuarios].[ID] 
-		GROUP BY [TipoMovimiento].[Nombre]
-		SET NOCOUNT OFF;
+			SELECT [TipoMovimiento].[Nombre] as 'TipoJornada',
+			[PlanillaSemanaXEmpleado].[SalarioTotal],
+			[PlanillaSemanaXEmpleado].[TotalDeducciones], 
+			[PlanillaSemanaXEmpleado].[SalarioNeto],
+			[MovimientoCredito].[Horas]
+			FROM [dbo].[Usuarios] 
+			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+			INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
+			INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
+			INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
+			INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
+			INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
+			WHERE @inIdUsuario = [Usuarios].[ID] 
+			GROUP BY [TipoMovimiento].[Nombre]
+			SET NOCOUNT OFF;
 	END
 GO
 
 -------------------------------------------------------------------------------------------------------------------------------
 
 
-DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMonto];
+DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMontoSemana];
 
-CREATE PROCEDURE [dbo].[DeduccionesMonto] @inIdUsuario INT
+CREATE PROCEDURE [dbo].[DeduccionesMontoSemana] @inIdUsuario INT
 
-AS BEGIN
-	SET NOCOUNT ON;
+	AS BEGIN
+		SET NOCOUNT ON;
 		
-		SELECT [TipoDeduccion].[Nombre],
-		[TipoDeduccion].[Porcentual],
-		[Deducciones].[Monto]
-		FROM [dbo].[Usuarios] 
-		INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-		INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
-		INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
-		INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
-		WHERE @inIdUsuario = [Usuarios].[ID] 
+			SELECT [TipoDeduccion].[Nombre],
+			[TipoDeduccion].[Porcentual],
+			[Deducciones].[Monto]
+			FROM [dbo].[Usuarios] 
+			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+			INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
+			INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
+			WHERE @inIdUsuario = [Usuarios].[ID];
 		SET NOCOUNT OFF;
 	END
 GO
 
-EXEC [DeduccionesMonto] @inIdUsuario = 1
+EXEC [DeduccionesMontoSemana] @inIdUsuario = 1
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+
+DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMonto];
+
+CREATE PROCEDURE [dbo].[HorasMontos] @inIdUsuario INT, @inFechaInicio datetime, @inFechaFin datetime
+
+	AS BEGIN
+		SET NOCOUNT ON;
+			SELECT [TipoMovimiento].[Nombre],
+			[MovimientoCredito].[Monto]
+			FROM [dbo].[Usuarios]
+			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+			INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
+			INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
+			INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
+			INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
+			WHERE @inIdUsuario = [Usuarios].[ID] AND 
+			[MovimientoCredito].[Fecha] BETWEEN @inFechaInicio AND @inFechaFin
+			ORDER BY [TipoMovimiento].[Nombre];
+		SET NOCOUNT OFF;
+	END
+GO
+
+EXEC [HorasMontos] @inIdUsuario = 1, @inFechaInicio = '1968-10-23 12:45:37', @inFechaFin = '2025-10-23 12:45:37'
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+------DROP PROCEDURE [dbo].[SalariosAnuales]
+
+CREATE PROCEDURE [dbo].[SalariosAnuales] @inIdUsuario INT
+
+	AS BEGIN
+		SET NOCOUNT ON;
+			SELECT [PlanillaMesXEmpleado].[SalarioTotal],
+			[PlanillaMesXEmpleado].[TotalDeducciones], 
+			[PlanillaMesXEmpleado].[SalarioNeto]
+			FROM [dbo].[Usuarios] 
+			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [PlanillaMesXEmpleado].[IdObrero] = [Obrero].[ID]
+			WHERE @inIdUsuario = [Usuarios].[ID] AND 
+			[PlanillaMesXEmpleado].[FechaInicio] between DATEADD(mm, -12, GETDATE())  and getdate()
+		SET NOCOUNT OFF;
+	END
+GO
+
+EXEC [SalariosAnuales] @inIdUsuario = 1
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+
+DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMontoMes];
+
+CREATE PROCEDURE [dbo].[DeduccionesMontoMes] @inIdUsuario INT
+
+	AS BEGIN
+		SET NOCOUNT ON;
+		
+			SELECT [TipoDeduccion].[Nombre],
+			[TipoDeduccion].[Porcentual],
+			[Deducciones].[Monto]
+			FROM [dbo].[Usuarios] 
+			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
+			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [PlanillaMesXEmpleado].[IdObrero] = [Obrero].[ID]
+			INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
+			INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
+			WHERE @inIdUsuario = [Usuarios].[ID] AND
+			[PlanillaMesXEmpleado].[FechaInicio] between DATEADD(MONTH, -1, GETDATE())  and getdate();
+		SET NOCOUNT OFF;
+	END
+GO
+
+EXEC [DeduccionesMontoMes] @inIdUsuario = 1
