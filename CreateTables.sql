@@ -89,8 +89,7 @@ CREATE TABLE [dbo].[Deducciones](
 	[IdObrero] [int] NOT NULL,
 	[IdTipoDeduccion] [int] NOT NULL,
 	[Monto] [money] NOT NULL,
-	[Fecha] [date] NULL,
-	[Activa] [bit] NOT NULL DEFAULT 0,
+	[Activa] [bit] NOT NULL DEFAULT 1,
  CONSTRAINT [PK_Deducciones] PRIMARY KEY CLUSTERED 
 (
 	[ID] ASC

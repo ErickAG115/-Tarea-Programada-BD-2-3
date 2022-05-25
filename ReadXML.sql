@@ -1,4 +1,13 @@
-use [ProyectoBD]
+USE [ProyectoBD]
+GO 
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET NOCOUNT ON
 
 DECLARE @xmlData XML
 
@@ -57,3 +66,5 @@ SELECT
 	T.Item.value('@Id', 'INT'),
 	T.Item.value('@Nombre', 'VARCHAR(128)')
 FROM @xmlData.nodes('Datos/Catalogos/TiposDeMovimiento/TipoDeMovimiento') as T(Item)
+
+SET NOCOUNT OFF
