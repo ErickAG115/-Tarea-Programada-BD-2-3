@@ -51,9 +51,9 @@ DECLARE @HoraFinJ TIME
 DECLARE @Jornada INT
 DECLARE @horasOrdinarias INT
 DECLARE @horasDobles INT
-DECLARE @montoGanadoHO MONEY
-DECLARE @montoGanadoHD MONEY
-DECLARE @montoGanadoHE MONEY
+DECLARE @montoGanadoHO MONEY = 0
+DECLARE @montoGanadoHD MONEY = 0
+DECLARE @montoGanadoHE MONEY = 0
 DECLARE @EntradaOP TIME
 DECLARE @SalidaOP TIME
 DECLARE @SalarioXHora INT
@@ -83,14 +83,8 @@ FROM @Fechas
 
 INSERT dbo.Jornada (IdTipoJornada)
 SELECT 1
-INSERT dbo.Jornada (IdTipoJornada)
-SELECT 2
-INSERT dbo.Jornada (IdTipoJornada)
-SELECT 3
-
 
 --
-
 
 WHILE (@FechaItera<=@FechaFin)
 BEGIN
@@ -287,17 +281,17 @@ BEGIN
 						
 			SET @montoGanadoHO = @horasOrdinarias*@SalarioXHora
 			
+			SET @horasDobles = (DATEDIFF(MI,@HoraFinJ, @Salida))/60;
+
 			IF @Dobles=1
 			BEGIN
-				IF (EXISTS(SELECT F.FECHA FROM FERIADOS F WHERE F.Fecha=@FechaItera)) OR (DATENAME(WEEKDAY,@FechaItera)='Sunday')
+				IF ((EXISTS(SELECT F.FECHA FROM FERIADOS F WHERE F.Fecha=@FechaItera)) OR (DATENAME(WEEKDAY,@FechaItera)='Sunday')) AND @horasDobles>0
 				BEGIN
-
-				SET @horasDobles = (DATEDIFF(MI,@HoraFinJ, @Salida))/60;
 				
-				--- determinar horas extraordinarias dobles  y monto
-				SET @montoGanadoHD = (@horasDobles*@SalarioXHora)*2;
+					--- determinar horas extraordinarias dobles  y monto
+					SET @montoGanadoHD = (@horasDobles*@SalarioXHora)*2;
 								
-				END 
+					END 
 				ELSE 
 				BEGIN
 					--- determinar horas extraordinarias normales y moto
@@ -412,7 +406,7 @@ BEGIN
 				UPDATE dbo.PlanillaSemanaXEmpleado
 				SET SalarioNeto = SalarioNeto + @SalarioNeto
 				WHERE IdObrero = @idempleado and @FechaItera BETWEEN FechaInicio and FechaFinal
-
+				
 				UPDATE dbo.PlanillaSemanaXEmpleado
 				SET SalarioTotal=SalarioTotal + @montoGanadoHO+@montoGanadoHE+@montoGanadoHD
 				WHERE IdObrero=@idEmpleado and @FechaItera BETWEEN FechaInicio and FechaFinal
