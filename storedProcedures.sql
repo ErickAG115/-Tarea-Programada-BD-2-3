@@ -1,4 +1,4 @@
-use [ProyectoBD];
+ use [ProyectoBD];
 
 --------------------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS [dbo].[filtrarNombre];
@@ -132,21 +132,13 @@ CREATE PROCEDURE [dbo].[PlanillasSemanales] @inIdUsuario INT
 
 	AS BEGIN
 		SET NOCOUNT ON;
-		
-			SELECT [TipoMovimiento].[Nombre] as 'TipoJornada',
-			[PlanillaSemanaXEmpleado].[SalarioTotal],
-			[PlanillaSemanaXEmpleado].[TotalDeducciones], 
-			[PlanillaSemanaXEmpleado].[SalarioNeto],
-			[MovimientoCredito].[Horas]
+			SELECT [dbo].[PlanillaSemanaXEmpleado].[SalarioTotal],
+			[dbo].[PlanillaSemanaXEmpleado].[TotalDeducciones], 
+			[dbo].[PlanillaSemanaXEmpleado].[SalarioNeto]
 			FROM [dbo].[Usuarios] 
 			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-			INNER JOIN [dbo].[Jornada] ON [Jornada].[ID] = [Obrero].[IdJornada]
-			INNER JOIN [dbo].[PlanillaSemanaXEmpleado] ON [PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
-			INNER JOIN [dbo].[MarcasDeAsistencia] ON [MarcasDeAsistencia].[IdJornada] = [Jornada].[ID]
-			INNER JOIN [dbo].[MovimientoCredito] ON [MovimientoCredito].[IdAsistencia] = [MarcasDeAsistencia].[ID]
-			INNER JOIN [dbo].[TipoMovimiento] ON [TipoMovimiento].[ID] = [MovimientoCredito].[IdTipoMov]
+			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [dbo].[PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
 			WHERE @inIdUsuario = [Usuarios].[ID] 
-			GROUP BY [TipoMovimiento].[Nombre]
 			SET NOCOUNT OFF;
 	END
 GO
