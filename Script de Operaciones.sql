@@ -72,6 +72,10 @@ DECLARE @ObreroSS INT
 DECLARE @ValorDocuSS INT
 DECLARE @FirstEiId INT
 DECLARE @LastEiId INT
+DECLARE @FinMes DATE
+DECLARE @FinNextMes DATE
+DECLARE @FechaFinMes DATE
+DECLARE @NextDay DATE
 
 INSERT @Fechas (FechaOperacion)
 SELECT T.Item.value('@Fecha', 'DATE')
@@ -95,6 +99,8 @@ BEGIN
 	DELETE FROM @EliminarDeducciones
 	DELETE FROM @asistencias
 	DELETE FROM @NuevosHorarios
+
+	EXECUTE RetornarJueves @inFecha = @FechaItera, @outFecha = @FinMes OUTPUT
 	
 	INSERT @EmpleadosInsertar (FechaNacimiento, Nombre, Passwrd, UserName, valorDocuIdent, IdDepartamento, IdPuesto, IdTipoDocu)
 	SELECT 
@@ -149,7 +155,7 @@ BEGIN
 		INSERT dbo.PlanillaMesXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero)
 		SELECT
 			@FechaItera,
-			EOMONTH(@FechaItera),
+			@FinMes,
 			0,
 			0,
 			0,
@@ -223,7 +229,6 @@ BEGIN
 	IF @xmlData.exist('Datos/Operacion[@Fecha = sql:variable("@FechaItera")]/MarcaDeAsistencia') = 1
 	BEGIN
 
-
 		SELECT @lo=Min(A.ID), @hi=Max(A.ID)
 		FROM @asistencias A
 	
@@ -247,7 +252,11 @@ BEGIN
 			FROM dbo.Puesto P
 			INNER JOIN dbo.Obrero O ON P.ID = O.IdPuesto
 			WHERE @idempleado = O.ID
-		
+			
+			SELECT @FechaFinMes = M.FechaFinal
+			FROM PlanillaMesXEmpleado M
+			WHERE M.IdObrero = @idEmpleado AND @FechaItera BETWEEN M.FechaInicio and M.FechaFinal
+
 			-- Determinar horas ordinarias
 			-- determinar la jornada de esta semana de ese empleado
 			SELECT @HoraInicioJ=TJ.HoraEntrada, @HoraFinJ=TJ.HoraSalida
@@ -324,7 +333,18 @@ BEGIN
 				5
 				FROM dbo.Deducciones D
 				INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
-				WHERE D.IdObrero = @idempleado AND TD.Obligatorio = 'No' AND D.Activa = 1
+				WHERE D.IdObrero = @idempleado AND TD.Obligatorio = 'No' AND D.Activa = 1 AND TD.Porcentual = 'Si'
+
+				INSERT @DeduccionesObrero (Monto,Porcentaje,Porcentual,IdDed,Obligatorio)
+				SELECT
+				D.Monto,
+				TD.Valor,
+				TD.Porcentual,
+				D.ID,
+				5
+				FROM dbo.Deducciones D
+				INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
+				WHERE D.IdObrero = @idempleado AND TD.Obligatorio = 'No' AND D.Activa = 1 AND TD.Porcentual = 'No'
 
 				SELECT @Deduccion = MIN(DO.ID) FROM @DeduccionesObrero DO
 				SELECT @MAXDeduccion = MAX(DO.ID) FROM @DeduccionesObrero DO
@@ -357,7 +377,7 @@ BEGIN
 				END
 			END
 			SET @EsFinMes=0
-			IF (@FechaItera = EOMONTH(@FechaItera))
+			IF (@FechaItera = @FechaFinMes)
 			BEGIN
 				SET @EsFinMes=1
 			END
@@ -391,11 +411,15 @@ BEGIN
 					
 				If @EsFinMes = 1
 				BEGIN
+					
+					SET @NextDay = DATEADD(DAY, 1, @FechaItera)
+
+					EXECUTE RetornarJueves @inFecha = @NextDay, @outFecha = @FinNextMes OUTPUT
 						
 					INSERT dbo.PlanillaMesXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero)
 					SELECT
-						DATEADD(day, 1, @FechaItera),
-						EOMONTH(DATEADD(day, 1, @FechaItera)),
+						DATEADD(DAY, 1, @FechaItera),
+						@FinNextMes,
 						0,
 						0,
 						0,
@@ -456,7 +480,7 @@ BEGIN
 						SalarioNeto = M.SalarioNeto+S.SalarioNeto
 					FROM dbo.PlanillaSemanaXEmpleado S
 					INNER JOIN dbo.PlanillaMesXEmpleado M ON S.IdMes = M.ID 
-					WHERE S.IdObrero = @idempleado AND S.FechaInicio BETWEEN M.FechaInicio AND M.FechaFinal
+					WHERE S.IdObrero = @idempleado AND @FechaFinMes = M.FechaFinal
 
 				END
 			

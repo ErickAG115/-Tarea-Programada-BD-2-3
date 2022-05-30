@@ -251,3 +251,28 @@ CREATE PROCEDURE [dbo].[DeduccionesMontoMes] @inIdUsuario INT
 GO
 
 EXEC [DeduccionesMontoMes] @inIdUsuario = 1
+
+DROP PROCEDURE IF EXISTS [dbo].[RetornarJueves]
+
+
+CREATE PROCEDURE [dbo].[RetornarJueves] @inFecha DATE, @outFecha DATE OUTPUT
+
+	AS BEGIN
+
+		SET NOCOUNT ON
+		
+		DECLARE @InicioMes DATE = DATEADD(DAY,1,EOMONTH(@inFecha))
+
+		DECLARE @NumDia INT = DATEPART(WEEKDAY,@InicioMes)
+
+		DECLARE @DiferenciaJ INT = 5-@NumDia
+
+		DECLARE @Jueves DATE = DATEADD(DAY,@DiferenciaJ,@InicioMes)
+
+		SELECT @outFecha = @Jueves
+
+		SET NOCOUNT OFF
+	END
+GO
+
+
