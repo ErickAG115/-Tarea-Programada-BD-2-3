@@ -206,7 +206,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = sqlsrv_query($conn, $tsql);
     echo "<table border='4' class='stats' cellspacing='0'>
       <tr>
-      <td class='hed' colspan='8'>Salario Bruto de la Semana</td>
+      <td class='hed' colspan='8'>Planillas Semanales</td>
       </tr>
       <tr>
       <th>Inicio</th>
@@ -238,7 +238,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt = sqlsrv_query($conn, $tsql);
     echo "<table border='4' class='stats' cellspacing='0'>
       <tr>
-      <td class='hed' colspan='8'>Salario Bruto de la Semana</td>
+      <td class='hed' colspan='8'>Planillas Mensuales</td>
       </tr>
       <tr>
       <th>Inicio</th>
