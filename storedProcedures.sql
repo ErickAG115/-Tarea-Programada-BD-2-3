@@ -1,4 +1,4 @@
- use [ProyectoBD];
+use [ProyectoBD];
 
 --------------------------------------------------------------------------------------
 DROP PROCEDURE IF EXISTS [dbo].[filtrarNombre];
@@ -126,53 +126,10 @@ GO
 -------------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------Nuevos Stored procedures--------------------------------------------------------------------------------------
 
-DROP PROCEDURE IF EXISTS [dbo].[PlanillasSemanales];
-
-CREATE PROCEDURE [dbo].[PlanillasSemanales] @inIdUsuario INT
-
-	AS BEGIN
-		SET NOCOUNT ON;
-			SELECT [dbo].[PlanillaSemanaXEmpleado].[SalarioTotal],
-			[dbo].[PlanillaSemanaXEmpleado].[TotalDeducciones], 
-			[dbo].[PlanillaSemanaXEmpleado].[SalarioNeto]
-			FROM [dbo].[Usuarios] 
-			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [dbo].[PlanillaSemanaXEmpleado].[IdObrero] = [Obrero].[ID]
-			WHERE @inIdUsuario = [Usuarios].[ID] 
-			SET NOCOUNT OFF;
-	END
-GO
-
--------------------------------------------------------------------------------------------------------------------------------
-
-
-DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMontoSemana];
-
-CREATE PROCEDURE [dbo].[DeduccionesMontoSemana] @inIdUsuario INT
-
-	AS BEGIN
-		SET NOCOUNT ON;
-		
-			SELECT [TipoDeduccion].[Nombre],
-			[TipoDeduccion].[Porcentual],
-			[Deducciones].[Monto]
-			FROM [dbo].[Usuarios] 
-			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-			INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
-			INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
-			WHERE @inIdUsuario = [Usuarios].[ID];
-		SET NOCOUNT OFF;
-	END
-GO
-
-EXEC [DeduccionesMontoSemana] @inIdUsuario = 1
-
--------------------------------------------------------------------------------------------------------------------------------
-
 
 DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMonto];
 
-CREATE PROCEDURE [dbo].[HorasMontos] @inIdUsuario INT, @inFechaInicio datetime, @inFechaFin datetime
+CREATE PROCEDURE [dbo].[HorasMontos] @inIdUsuario INT, @inFechaInicio date, @inFechaFin date
 
 	AS BEGIN
 		SET NOCOUNT ON;
@@ -191,7 +148,7 @@ CREATE PROCEDURE [dbo].[HorasMontos] @inIdUsuario INT, @inFechaInicio datetime, 
 	END
 GO
 
-EXEC [HorasMontos] @inIdUsuario = 1, @inFechaInicio = '1968-10-23 12:45:37', @inFechaFin = '2025-10-23 12:45:37'
+EXEC [HorasMontos] @inIdUsuario = 2, @inFechaInicio = '2022-02-04', @inFechaFin = '2022-02-10'
 
 
 
@@ -199,50 +156,23 @@ EXEC [HorasMontos] @inIdUsuario = 1, @inFechaInicio = '1968-10-23 12:45:37', @in
 
 ------DROP PROCEDURE [dbo].[SalariosAnuales]
 
-CREATE PROCEDURE [dbo].[SalariosAnuales] @inIdUsuario INT
+CREATE PROCEDURE [dbo].[SalariosAnuales] @inUsername VARCHAR(128)
 
 	AS BEGIN
-		SET NOCOUNT ON;
-			SELECT [PlanillaMesXEmpleado].[SalarioTotal],
-			[PlanillaMesXEmpleado].[TotalDeducciones], 
-			[PlanillaMesXEmpleado].[SalarioNeto]
-			FROM [dbo].[Usuarios] 
-			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [PlanillaMesXEmpleado].[IdObrero] = [Obrero].[ID]
-			WHERE @inIdUsuario = [Usuarios].[ID] AND 
-			[PlanillaMesXEmpleado].[FechaInicio] between DATEADD(mm, -12, GETDATE())  and getdate()
-		SET NOCOUNT OFF;
+		SET NOCOUNT ON
+			DECLARE @EMP INT
+			SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+			SELECT PM.FechaInicio, PM.FechaFinal, PM.TotalDeducciones, PM.SalarioTotal, PM.SalarioNeto
+			FROM dbo.PlanillaMesXEmpleado PM
+			WHERE PM.IdObrero = @EMP
+		SET NOCOUNT OFF
 	END
 GO
 
-EXEC [SalariosAnuales] @inIdUsuario = 1
+EXEC [SalariosAnuales] @inUsername = 'LGomes'
 
 
 -------------------------------------------------------------------------------------------------------------------------------
-
-
-DROP PROCEDURE IF EXISTS [dbo].[DeduccionesMontoMes];
-
-CREATE PROCEDURE [dbo].[DeduccionesMontoMes] @inIdUsuario INT
-
-	AS BEGIN
-		SET NOCOUNT ON;
-		
-			SELECT [TipoDeduccion].[Nombre],
-			[TipoDeduccion].[Porcentual],
-			[Deducciones].[Monto]
-			FROM [dbo].[Usuarios] 
-			INNER JOIN [dbo].[Obrero] ON [Obrero].[ID] = [Usuarios].[IdObrero]
-			INNER JOIN [dbo].[PlanillaMesXEmpleado] ON [PlanillaMesXEmpleado].[IdObrero] = [Obrero].[ID]
-			INNER JOIN [dbo].[Deducciones] ON [Deducciones].[IdObrero] = [Obrero].[ID]
-			INNER JOIN [dbo].[TipoDeduccion] ON [TipoDeduccion].[ID] = [Deducciones].[IdTipoDeduccion]
-			WHERE @inIdUsuario = [Usuarios].[ID] AND
-			[PlanillaMesXEmpleado].[FechaInicio] between DATEADD(MONTH, -1, GETDATE())  and getdate();
-		SET NOCOUNT OFF;
-	END
-GO
-
-EXEC [DeduccionesMontoMes] @inIdUsuario = 1
 
 DROP PROCEDURE IF EXISTS [dbo].[RetornarJueves]
 
@@ -267,4 +197,294 @@ CREATE PROCEDURE [dbo].[RetornarJueves] @inFecha DATE, @outFecha DATE OUTPUT
 	END
 GO
 
+-------------------------------------------------------------------------------------------------------------------------------
 
+CREATE PROCEDURE [dbo].[ConsultaSemanas] @inUsername VARCHAR(128)
+	AS BEGIN
+		SET NOCOUNT ON
+
+		DECLARE @EMP INT
+		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+		DECLARE @DOC INT 
+		SELECT @DOC = O.ValorDocIdentidad FROM dbo.Obrero O WHERE O.ID = @EMP
+		DECLARE @Planillas TABLE (ID INT IDENTITY(1,1), FechaInicio DATE, FechaFin DATE, SalarioBruto MONEY, SalarioNeto MONEY, Deducciones INT, HorasO INT, HorasE INT, HorasD INT)
+		DECLARE @FirstID INT
+		DECLARE @LastID INT
+		DECLARE @FechaINI DATE
+		DECLARE @FechaFIN DATE
+		DECLARE @HO INT = 0
+		DECLARE @HE INT = 0
+		DECLARE @HD INT = 0
+
+		INSERT @Planillas (FechaInicio,FechaFin,SalarioBruto,SalarioNeto,Deducciones,HorasO,HorasE,HorasD)
+		SELECT PSE.FechaInicio, PSE.FechaFinal,PSE.SalarioTotal,PSE.SalarioNeto,PSE.TotalDeducciones,0,0,0
+		FROM dbo.PlanillaSemanaXEmpleado PSE
+		WHERE PSE.IdObrero = @EMP
+
+		SELECT @FirstID = MIN(P.ID)
+		FROM @Planillas P
+
+		SELECT @LastID = MAX(P.ID)
+		FROM @Planillas P
+
+		WHILE (@FirstID<=@LastID)
+		BEGIN
+			SELECT @FechaINI = P.FechaInicio, @FechaFIN = p.FechaFin
+			FROM @Planillas P
+			WHERE P.ID = @FirstID
+
+			SELECT @HO = SUM(MC.Horas)
+			FROM dbo.MovimientoCredito MC
+			INNER JOIN dbo.MarcasDeAsistencia MA ON MC.IdAsistencia = ma.ID
+			WHERE MA.ValorTipoDocu = @DOC AND MC.IdTipoMov = 1 AND MC.Fecha BETWEEN @FechaINI AND @FechaFIN
+
+			SELECT @HD = ISNULL(SUM(MC.Horas),0)
+			FROM dbo.MovimientoCredito MC
+			INNER JOIN dbo.MarcasDeAsistencia MA ON MC.IdAsistencia = ma.ID
+			WHERE MA.ValorTipoDocu = @DOC AND MC.IdTipoMov = 3 AND MC.Fecha BETWEEN @FechaINI AND @FechaFIN
+
+			SELECT @HE = ISNULL(SUM(MC.Horas),0)
+			FROM dbo.MovimientoCredito MC
+			INNER JOIN dbo.MarcasDeAsistencia MA ON MC.IdAsistencia = ma.ID
+			WHERE MA.ValorTipoDocu = @DOC AND MC.IdTipoMov = 2 AND MC.Fecha BETWEEN @FechaINI AND @FechaFIN
+
+			UPDATE @Planillas 
+			SET HorasO = @HO, HorasE = @HE, HorasD = @HD
+			WHERE ID = @FirstID
+	
+			SET @FirstID = @FirstID+1
+		END
+		SET NOCOUNT OFF
+		SELECT P.FechaInicio,P.FechaFin,P.SalarioBruto,P.SalarioNeto,P.Deducciones,P.HorasO,P.HorasE,P.HorasD FROM @Planillas P
+	END
+GO
+
+EXEC dbo.ConsultaSemanas @inUsername = 'LGomes'
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[ConsultarDeducciones] @inUsername VARCHAR(128), @inFechaIni DATE, @inFechaFin DATE
+
+	AS BEGIN
+		SET NOCOUNT ON
+
+		DECLARE @EMP INT
+		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+
+		SELECT TD.Nombre, TD.Porcentual, D.Monto
+		FROM dbo.MovimientoDebito MD
+		INNER JOIN dbo.Deducciones D ON MD.IdDeduccion = D.ID
+		INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
+		WHERE D.IdObrero = @EMP AND MD.Fecha BETWEEN @inFechaIni AND @inFechaFin
+
+		SET NOCOUNT OFF
+	END
+GO
+
+EXEC dbo.ConsultarDeducciones @inUsername = 'LGomes', @inFechaIni = '2022-02-04', @inFechaFin = '2022-03-03'
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[ConsultarAsistencias] @inUsername VARCHAR(128), @inFechaIni DATE, @inFechaFin DATE
+
+	AS BEGIN
+		
+		DECLARE @EMP INT
+		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+		DECLARE @DOC INT 
+		SELECT @DOC = O.ValorDocIdentidad FROM dbo.Obrero O WHERE O.ID = @EMP
+
+		SET NOCOUNT ON
+		SELECT TM.Nombre, MA.FechaEntrada, MA.FechaSalida, MC.Horas, MC.Monto 
+		FROM dbo.MovimientoCredito MC
+		INNER JOIN dbo.MarcasDeAsistencia MA ON MC.IdAsistencia = MA.ID
+		INNER JOIN dbo.TipoMovimiento TM ON MC.IdTipoMov = TM.ID
+		WHERE MA.ValorTipoDocu = @DOC AND MC.Fecha BETWEEN @inFechaIni AND @inFechaFin
+		SET NOCOUNT OFF
+	END
+GO
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+EXEC dbo.ConsultarAsistencias @inUsername = 'LGomes', @inFechaIni = '2022-02-04', @inFechaFin = '2022-02-10'
+
+CREATE TYPE [dbo].[Deduccion] AS TABLE(
+    ID INT IDENTITY(1,1) NOT NULL,
+	Monto MONEY NOT NULL,
+	Porcentaje FLOAT NOT NULL,
+	Porcentual VARCHAR(128) NOT NULL,
+	IdDed INT NOT NULL,
+	Obligatorio INT NOT NULL
+)
+GO
+
+CREATE PROCEDURE [dbo].[Transaccion] @inValorDocIdentidad INT, @inEntradaF SMALLDATETIME, @inSalidaF SMALLDATETIME, @inMontoGanadoHo MONEY, @inMontoGanadoHD MONEY, @inMontoGanadoHE MONEY,
+									@inFechaItera DATE, @inHorasOrdinarias INT, @inHorasDobles INT, @inEsFinMes BIT, @inEsJueves BIT, @inFinNextMes DATE, @inIdEmpleado INT,
+									@inSalarioNeto MONEY, @inDeduccionesObrero Deduccion READONLY, @inFechaIniMes DATE, @inFechaFinMes DATE
+
+	AS BEGIN
+		
+		SET NOCOUNT ON
+
+		DECLARE @NextDay DATE
+		DECLARE @Deduccion INT
+		DECLARE @MAXDeduccion INT
+		DECLARE @SB INT
+		DECLARE @SN INT
+		DECLARE @TD INT
+
+		BEGIN TRANSACTION
+			INSERT dbo.MarcasDeAsistencia(ValorTipoDocu,FechaEntrada,FechaSalida,IdJornada)
+			SELECT @inValorDocIdentidad,@inEntradaF,@inSalidaF,O.IdJornada
+			FROM dbo.Obrero O
+			WHERE @inValorDocIdentidad = O.ValorDocIdentidad
+				
+			IF @inMontoGanadoHo>0
+			BEGIN
+				INSERT dbo.MovimientoCredito (Fecha,Monto,IdAsistencia,IdTipoMov,Horas)
+				SELECT @inFechaItera, @inMontoGanadoHO, MAX(A.ID),1,@inHorasOrdinarias
+				FROM dbo.MarcasDeAsistencia A
+			END
+			
+			IF @inMontoGanadoHD>0
+			BEGIN
+				INSERT dbo.MovimientoCredito (Fecha,Monto,IdAsistencia,IdTipoMov,Horas)
+				SELECT @inFechaItera, @inMontoGanadoHD, MAX(A.ID),3,@inHorasDobles
+				FROM dbo.MarcasDeAsistencia A
+			END
+				
+			IF @inMontoGanadoHE>0
+			BEGIN
+				INSERT dbo.MovimientoCredito (Fecha,Monto,IdAsistencia,IdTipoMov,Horas)
+				SELECT @inFechaItera, @inMontoGanadoHE, MAX(A.ID),2,@inHorasDobles
+				FROM dbo.MarcasDeAsistencia A
+			END
+					
+			IF @inEsFinMes = 1
+			BEGIN
+					
+				SET @NextDay = DATEADD(DAY, 1, @inFechaItera)
+
+				EXECUTE RetornarJueves @inFecha = @NextDay, @outFecha = @inFinNextMes OUTPUT
+						
+				INSERT dbo.PlanillaMesXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero)
+				SELECT
+					DATEADD(DAY, 1, @inFechaItera),
+					@inFinNextMes,
+					0,
+					0,
+					0,
+					@inIdEmpleado
+
+			END
+
+			UPDATE dbo.PlanillaSemanaXEmpleado
+			SET SalarioNeto = SalarioNeto + @inSalarioNeto
+			WHERE IdObrero = @inIdempleado and @inFechaItera BETWEEN FechaInicio and FechaFinal
+
+			UPDATE dbo.PlanillaMesXEmpleado
+			SET  SalarioNeto = SalarioNeto + @inSalarioNeto				
+			WHERE IdObrero = @inIdempleado AND @inFechaItera BETWEEN FechaInicio AND FechaFinal
+				
+			UPDATE dbo.PlanillaSemanaXEmpleado
+			SET SalarioTotal=SalarioTotal + @inMontoGanadoHO+@inMontoGanadoHE+@inMontoGanadoHD
+			WHERE IdObrero=@inIdEmpleado and @inFechaItera BETWEEN FechaInicio and FechaFinal
+
+			IF @inEsJueves = 1
+			BEGIN
+				SELECT @Deduccion = MIN(DO.ID) FROM @inDeduccionesObrero DO
+				SELECT @MAXDeduccion = MAX(DO.ID) FROM @inDeduccionesObrero DO
+
+				WHILE (@Deduccion<=@MAXDeduccion)
+				BEGIN
+					INSERT dbo.MovimientoDebito (Fecha, Monto, IdDeduccion, IdTipoMov)
+					SELECT
+						@inFechaItera,
+						DO.Monto,
+						DO.IdDed,
+						DO.Obligatorio
+						FROM @inDeduccionesObrero DO
+						WHERE DO.ID = @Deduccion
+					SET @Deduccion = @Deduccion+1
+
+					UPDATE PlanillaSemanaXEmpleado
+					SET TotalDeducciones=TotalDeducciones+1
+					WHERE IdObrero = @inIdempleado AND @inFechaItera BETWEEN FechaInicio AND FechaFinal
+
+					UPDATE PlanillaMesXEmpleado
+					SET TotalDeducciones=TotalDeducciones+1
+					WHERE IdObrero = @inIdempleado AND @inFechaItera BETWEEN FechaInicio AND FechaFinal
+						
+				END
+
+				INSERT dbo.PlanillaSemanaXEmpleado (FechaInicio,FechaFinal,SalarioNeto,SalarioTotal,TotalDeducciones,IdObrero,IdMes,IdJornada)
+				SELECT
+					(DATEADD(day, 1, @inFechaItera)),
+					(DATEADD(day, 7, @inFechaItera)),
+					(0),
+					(0),
+					(0),
+					(@inIdempleado),
+					(SELECT M.ID
+					FROM dbo.PlanillaMesXEmpleado M
+					WHERE (@inFechaItera BETWEEN M.FechaInicio AND M.FechaFinal) AND (IdObrero=@inIdempleado)),
+					(SELECT O.IdJornada
+					FROM dbo.Obrero O
+					WHERE O.ValorDocIdentidad = @inValorDocIdentidad)
+							
+			END
+
+			SELECT @TD = SUM(S.TotalDeducciones)
+			FROM dbo.PlanillaSemanaXEmpleado S
+			WHERE IdObrero = @inIdempleado AND S.FechaInicio BETWEEN @inFechaIniMes AND @inFechaFinMes
+
+			SELECT @SN = SUM(S.SalarioNeto)
+			FROM dbo.PlanillaSemanaXEmpleado S
+			WHERE IdObrero = @inIdempleado AND S.FechaInicio BETWEEN @inFechaIniMes AND @inFechaFinMes
+
+			SELECT @SB = SUM(S.SalarioTotal)
+			FROM dbo.PlanillaSemanaXEmpleado S
+			WHERE IdObrero = @inIdempleado AND S.FechaInicio BETWEEN @inFechaIniMes AND @inFechaFinMes
+
+			UPDATE dbo.PlanillaMesXEmpleado
+			SET  SalarioTotal = SalarioTotal + (@inMontoGanadoHD+@inMontoGanadoHE+@inMontoGanadoHO)				
+			WHERE IdObrero = @inIdempleado AND @inFechaItera BETWEEN FechaInicio AND FechaFinal
+			
+		COMMIT TRANSACTION
+		SET NOCOUNT OFF
+	END
+GO
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[RetornarFechaS] @inUsername VARCHAR(128)
+	AS BEGIN
+		SET NOCOUNT ON
+
+		DECLARE @EMP INT
+		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+
+		SELECT PS.FechaInicio, PS.FechaFinal
+		FROM dbo.PlanillaSemanaXEmpleado PS
+		WHERE PS.IdObrero = @EMP
+
+		SET NOCOUNT OFF
+	END
+GO
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PROCEDURE [dbo].[RetornarFechaM] @inUsername VARCHAR(128)
+	AS BEGIN
+		SET NOCOUNT ON
+
+		DECLARE @EMP INT
+		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
+
+		SELECT PS.FechaInicio, PS.FechaFinal
+		FROM dbo.PlanillaMesXEmpleado PS
+		WHERE PS.IdObrero = @EMP
+
+		SET NOCOUNT OFF
+	END
+GO

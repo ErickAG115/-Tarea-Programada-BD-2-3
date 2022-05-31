@@ -71,7 +71,7 @@
     <!--Febrero-->
     <Operacion Fecha="2022-02-04">
         <NuevoEmpleado FechaNacimiento="1964-04-13" Nombre="Alicia Perez Vidal" Password="7663" Username="APerez" ValorDocumentoIdentidad="55502591" idDepartamento="3" idPuesto="10" idTipoDocumentacionIdentidad="1" />
-        <NuevoEmpleado FechaNacimiento="1990-11-18" Nombre="Laura Gomez Lorenzo" Password="6111" Username="LGomez" ValorDocumentoIdentidad="58062607" idDepartamento="2" idPuesto="1" idTipoDocumentacionIdentidad="1" />
+        <NuevoEmpleado FechaNacimiento="1990-11-18" Nombre="Laura Gomez Lorenzo" Password="6111" Username="LGomes" ValorDocumentoIdentidad="58062607" idDepartamento="2" idPuesto="1" idTipoDocumentacionIdentidad="1" />
         <NuevoEmpleado FechaNacimiento="1989-07-22" Nombre="Daniel Navarro Hidalgo" Password="1573" Username="DNavarro" ValorDocumentoIdentidad="76125697" idDepartamento="3" idPuesto="8" idTipoDocumentacionIdentidad="2" />
         <NuevoEmpleado FechaNacimiento="1982-11-05" Nombre="Maria Fernanda Ramos Munoz" Password="7983" Username="MRamos" ValorDocumentoIdentidad="64818448" idDepartamento="2" idPuesto="9" idTipoDocumentacionIdentidad="2" />
         <NuevoEmpleado FechaNacimiento="1966-03-17" Nombre="Carlos Alberto Vega Crespo" Password="7153" Username="CVega" ValorDocumentoIdentidad="78417794" idDepartamento="4" idPuesto="8" idTipoDocumentacionIdentidad="1" />
