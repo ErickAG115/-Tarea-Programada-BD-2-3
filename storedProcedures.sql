@@ -114,7 +114,7 @@ DROP PROCEDURE IF EXISTS [dbo].[retornarUsers];
 
 CREATE PROCEDURE [dbo].[retornarUsers]
 	AS BEGIN
-		SELECT [Usuarios].[Nombre],[Usuarios].[Password] FROM [dbo].[Usuarios];
+		SELECT [Usuarios].[UserName],[Usuarios].[Password] FROM [dbo].[Usuarios];
 	END
 GO
 
@@ -162,7 +162,7 @@ CREATE PROCEDURE [dbo].[SalariosAnuales] @inUsername VARCHAR(128)
 		SET NOCOUNT ON
 			DECLARE @EMP INT
 			SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
-			SELECT PM.FechaInicio, PM.FechaFinal, PM.TotalDeducciones, PM.SalarioTotal, PM.SalarioNeto
+			SELECT PM.FechaInicio AS FechaInicio, PM.FechaFinal AS FechaFinal, PM.TotalDeducciones AS Deducciones, PM.SalarioTotal AS SalarioBruto, PM.SalarioNeto AS SalarioNeto
 			FROM dbo.PlanillaMesXEmpleado PM
 			WHERE PM.IdObrero = @EMP
 		SET NOCOUNT OFF
@@ -255,7 +255,9 @@ CREATE PROCEDURE [dbo].[ConsultaSemanas] @inUsername VARCHAR(128)
 			SET @FirstID = @FirstID+1
 		END
 		SET NOCOUNT OFF
-		SELECT P.FechaInicio,P.FechaFin,P.SalarioBruto,P.SalarioNeto,P.Deducciones,P.HorasO,P.HorasE,P.HorasD FROM @Planillas P
+		SELECT P.FechaInicio AS FechaInicio,P.FechaFin AS FechaFinal,P.SalarioBruto AS SalarioBruto,P.SalarioNeto AS SalarioNeto,
+		P.Deducciones AS Deducciones,P.HorasO AS HO,P.HorasE AS HE,P.HorasD AS HD 
+		FROM @Planillas P
 	END
 GO
 
@@ -263,43 +265,46 @@ EXEC dbo.ConsultaSemanas @inUsername = 'LGomes'
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE [dbo].[ConsultarDeducciones] @inUsername VARCHAR(128), @inFechaIni DATE, @inFechaFin DATE
+CREATE PROCEDURE [dbo].[ConsultarDeducciones] @inUsername VARCHAR(128), @inFechaIni VARCHAR(128), @inFechaFin VARCHAR(128)
 
 	AS BEGIN
 		SET NOCOUNT ON
 
+		DECLARE @FInicio DATE = CAST(@inFechaIni AS DATE)
+		DECLARE @FFin DATE = CAST(@inFechaFin AS DATE)
 		DECLARE @EMP INT
 		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
 
-		SELECT TD.Nombre, TD.Porcentual, D.Monto
+		SELECT TD.Nombre AS Nombre, TD.Porcentual AS Porcentual, D.Monto AS Monto
 		FROM dbo.MovimientoDebito MD
 		INNER JOIN dbo.Deducciones D ON MD.IdDeduccion = D.ID
 		INNER JOIN dbo.TipoDeduccion TD ON D.IdTipoDeduccion = TD.ID
-		WHERE D.IdObrero = @EMP AND MD.Fecha BETWEEN @inFechaIni AND @inFechaFin
+		WHERE D.IdObrero = @EMP AND MD.Fecha BETWEEN @FInicio AND @FFin
 
 		SET NOCOUNT OFF
 	END
 GO
 
-EXEC dbo.ConsultarDeducciones @inUsername = 'LGomes', @inFechaIni = '2022-02-04', @inFechaFin = '2022-03-03'
-
+EXEC ConsultarDeducciones @inUsername = 'LGomes', @inFechaIni = '2022-02-04', @inFechaFin = '2022-02-10'
 -------------------------------------------------------------------------------------------------------------------------------
 
-CREATE PROCEDURE [dbo].[ConsultarAsistencias] @inUsername VARCHAR(128), @inFechaIni DATE, @inFechaFin DATE
+CREATE PROCEDURE [dbo].[ConsultarAsistencias] @inUsername VARCHAR(128), @inFechaIni VARCHAR(128), @inFechaFin VARCHAR(128)
 
 	AS BEGIN
 		
+		DECLARE @FInicio DATE = CAST(@inFechaIni AS DATE)
+		DECLARE @FFin DATE = CAST(@inFechaFin AS DATE)
 		DECLARE @EMP INT
 		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
 		DECLARE @DOC INT 
 		SELECT @DOC = O.ValorDocIdentidad FROM dbo.Obrero O WHERE O.ID = @EMP
 
 		SET NOCOUNT ON
-		SELECT TM.Nombre, MA.FechaEntrada, MA.FechaSalida, MC.Horas, MC.Monto 
+		SELECT (TM.Nombre) AS Nombre, (MA.FechaEntrada) FechaEntrada, (MA.FechaSalida) AS FechaSalida, (MC.Horas) AS Horas, (MC.Monto) AS Monto 
 		FROM dbo.MovimientoCredito MC
 		INNER JOIN dbo.MarcasDeAsistencia MA ON MC.IdAsistencia = MA.ID
 		INNER JOIN dbo.TipoMovimiento TM ON MC.IdTipoMov = TM.ID
-		WHERE MA.ValorTipoDocu = @DOC AND MC.Fecha BETWEEN @inFechaIni AND @inFechaFin
+		WHERE MA.ValorTipoDocu = @DOC AND MC.Fecha BETWEEN @FInicio AND @FFin
 		SET NOCOUNT OFF
 	END
 GO
@@ -464,13 +469,15 @@ CREATE PROCEDURE [dbo].[RetornarFechaS] @inUsername VARCHAR(128)
 		DECLARE @EMP INT
 		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
 
-		SELECT PS.FechaInicio, PS.FechaFinal
+		SELECT (PS.FechaInicio) AS FechaInicio, (PS.FechaFinal) AS FechaFinal
 		FROM dbo.PlanillaSemanaXEmpleado PS
 		WHERE PS.IdObrero = @EMP
 
 		SET NOCOUNT OFF
 	END
 GO
+
+EXEC RetornarFechaS @inUsername = 'LGomes'
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -481,7 +488,7 @@ CREATE PROCEDURE [dbo].[RetornarFechaM] @inUsername VARCHAR(128)
 		DECLARE @EMP INT
 		SELECT @EMP = U.IdObrero FROM dbo.Usuarios U WHERE U.UserName = @inUsername
 
-		SELECT PS.FechaInicio, PS.FechaFinal
+		SELECT (PS.FechaInicio) AS FechaInicio, (PS.FechaFinal) AS FechaFinal
 		FROM dbo.PlanillaMesXEmpleado PS
 		WHERE PS.IdObrero = @EMP
 

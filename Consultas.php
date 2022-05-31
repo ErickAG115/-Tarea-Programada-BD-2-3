@@ -29,16 +29,35 @@ if($_GET){
 
 $_SESSION['Usuario'] = $Usuario;
 
-$name = $filtro = $insertPN = $insertPS = $nombreE = $puestoE = $tipoDocE = $valorDocE = $depE = $fechaE = $ID = "";
-
+$name = $inicioSemanaD = $finalSemanaD = $inicioMesD = $finalMesD = $inicioSemanaS = $finalSemanaS = $fechaCompareI = $fechaCompareF = "";
+$found = "false";
 
 ?>
 <div id="info" class="container">
-<h1>Consulta de Planillas</h1>
+<h1>Panel de Consultas</h1>
 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>"> 
+  <h3>Consulta de Planillas</h3>
   <input type="submit" name="submit" value="Planillas Semanales">
   <input type="submit" name="submit" value="Planillas Mensuales">
+  <h3>Consulta de Deducciones</h3>
+  <h4>Planilla Semanal</h4>
+  Fecha Inicio:<input type="text" name="inicioSded" value="<?php echo $inicioSemanaD;?>">
   <br><br>
+  Fecha Fin:<input type="text" name="finalSded" value="<?php echo $finalSemanaD;?>">
+  <br><br>
+  <input type="submit" name="submit" value="Consultar Deducciones Semanales">
+  <h4>Planilla Mensual</h4>
+  Fecha Inicio:<input type="text" name="inicioMded" value="<?php echo $inicioMesD;?>">
+  <br><br>
+  Fecha Fin:<input type="text" name="finalMded" value="<?php echo $finalMesD;?>">
+  <br><br>
+  <input type="submit" name="submit" value="Consultar Deducciones Mensuales">
+  <h3>Consulta de Salario Bruto Semanal</h3>
+  Fecha Inicio:<input type="text" name="inicioSsal" value="<?php echo $inicioSemanaS;?>">
+  <br><br>
+  Fecha Fin:<input type="text" name="finalSsal" value="<?php echo $finalSemanaS;?>">
+  <br><br>
+  <input type="submit" name="submit" value="Consultar Salario Bruto">
   <h3>Salir</h3>
   <input type="submit" name="submit" value="Log Off">
   <br><br>
@@ -50,144 +69,194 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: http://localhost/php_program/Log%20In%20Admin.php");
     exit();
   }
-  else if($_POST['submit'] == 'Editar Puestos'){
-    header("Location: http://localhost/php_program/Edit%20Puesto.php");
-    exit();
-  }
-  else if($_POST['submit'] == 'Editar Empleados'){
-    header("Location: http://localhost/php_program/Edit%20Employee.php");
-    exit();
-  }
-  else if($_POST['submit'] == 'Borrar Empleado'){
-    $ID = test_input($_POST["IDE"]);
-    if(empty($ID)){
+  else if($_POST['submit'] == 'Consultar Deducciones Semanales'){
+    $found = "false";
+    $inicioSemanaD = test_input($_POST["inicioSded"]);
+    $finalSemanaD = test_input($_POST["finalSded"]);
+    if(empty($inicioSemanaD)||empty($finalSemanaD)){
       echo "Hay espacios vacios";
     }
     else{
-      $tsql = "EXEC [dbo].[borrarEmpleado] @inID = $ID";
-      $stmt = sqlsrv_query($conn, $tsql);
-      $check = sqlsrv_fetch($stmt);
-      echo "El empleado ha sido borrado";
-    }
-  }
-  else if($_POST['submit'] == 'Borrar Puesto'){
-    $ID = test_input($_POST["IDP"]);
-    if(empty($ID)){
-      echo "Hay espacios vacios";
-    }
-    else{
-      $tsql = "EXEC [dbo].[borrarPuesto] @inID = $ID";
-      $stmt = sqlsrv_query($conn, $tsql);
-      $check = sqlsrv_fetch($stmt);
-      echo "El puesto ha sido borrado";
-    }
-  }
-  else if($_POST['submit'] == 'Listar Puestos'){
-    $tsql = "EXEC [filtrarNombre]";
-    $stmt = sqlsrv_query( $conn, $tsql);
-    echo "<table border='4' class='stats' cellspacing='0'>
+      $tsql = "EXEC [dbo].[RetornarFechaS] @inUsername = $Usuario";
+      $stmt = sqlsrv_query( $conn, $tsql);
+      while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+        $fechaCompareI = date_format($row['FechaInicio'],"Ymd");
+        $fechaCompareF = date_format($row['FechaFinal'],"Ymd");
+        if($fechaCompareI==$inicioSemanaD && $fechaCompareF==$finalSemanaD){
+            $found="true";
+        }
+      }
+      if($found=="false"){
+        echo "No existe una planilla semanal con las fechas dadas";
+      }
+      else{
+        $tsql = "EXEC ConsultarDeducciones @inUsername = $Usuario, @inFechaIni = $inicioSemanaD, @inFechaFin = $finalSemanaD";
+        $stmt = sqlsrv_query($conn, $tsql);
+        echo "<table border='4' class='stats' cellspacing='0'>
           <tr>
-          <td class='hed' colspan='8'>Listado de Puestos</td>
+          <td class='hed' colspan='8'>Deducciones de la Semana</td>
           </tr>
           <tr>
           <th>Nombre</th>
-          <th>Salario por hora</th>
+          <th>Porcentual</th>
+          <th>Monto</th>
           </tr>"; 
-    while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
-      echo "<tr>";
-      echo "<td>" . $row['NombreP'] . "</td>";
-      echo "<td>" . $row['SalarioXHora'] . "</td>";
-      echo "</tr>";
+        while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+          echo "<tr>";
+          echo "<td>" . $row['Nombre'] . "</td>";
+          echo "<td>" . $row['Porcentual'] . "</td>";
+          echo "<td>" . $row['Monto'] . "</td>";
+          echo "</tr>";
+        }
+      }
     }
   }
-  else if($_POST['submit'] == 'Listar Empleados'){
-    $tsql = "EXEC [listarEmpleados]";
-    $stmt = sqlsrv_query( $conn, $tsql);
-    echo "<table border='4' class='stats' cellspacing='0'>
-          <tr>
-          <td class='hed' colspan='8'>Listado de Empleados</td>
-          </tr>
-          <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Puesto</th>
-          <th>Tipo de DocIdentidad</th>
-          <th>Valor de DocIdentidad</th>
-          <th>Fecha de Nacimiento</th>
-          <th>Departamento</th>
-          </tr>"; 
-    while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
-      $date = date_format($row['FechaNacimiento'],"Ymd");
-      echo "<tr>";
-      echo "<td>" . $row['ID'] . "</td>";
-      echo "<td>" . $row['Nombre'] . "</td>";
-      echo "<td>" . $row['NombreP'] . "</td>";
-      echo "<td>" . $row['NombreTip'] . "</td>";
-      echo "<td>" . $row['ValorDocIdentidad'] . "</td>";
-      echo "<td>" . $date . "</td>";
-      echo "<td>" . $row['NombreDep'] . "</td>";
-      echo "</tr>";
-    }
-  }
-  else if($_POST['submit'] == 'Listar Filtro'){
-    $filtro = test_input($_POST["filtroN"]);
-    $tsql = "EXEC [dbo].[listarEmpleadosFiltro] @inNombre = '$filtro'";
-    $stmt = sqlsrv_query( $conn, $tsql);
-    echo "<table border='4' class='stats' cellspacing='0'>
-          <tr>
-          <td class='hed' colspan='8'>Listado de Empleados</td>
-          </tr>
-          <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Puesto</th>
-          <th>Tipo de DocIdentidad</th>
-          <th>Valor de DocIdentidad</th>
-          <th>Fecha de Nacimiento</th>
-          <th>Departamento</th>
-          </tr>"; 
-    while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
-      $date = date_format($row['FechaNacimiento'],"Ymd");
-      echo "<tr>";
-      echo "<td>" . $row['ID'] . "</td>";
-      echo "<td>" . $row['Nombre'] . "</td>";
-      echo "<td>" . $row['NombreP'] . "</td>";
-      echo "<td>" . $row['NombreTip'] . "</td>";
-      echo "<td>" . $row['ValorDocIdentidad'] . "</td>";
-      echo "<td>" . $date . "</td>";
-      echo "<td>" . $row['NombreDep'] . "</td>";
-      echo "</tr>";
-    }
-  }
-  else if($_POST['submit'] == 'Insertar Puesto'){
-    $insertPN = test_input($_POST["namePI"]);
-    $insertPS = test_input($_POST["pricePI"]);
-    if(empty($insertPN)||empty($insertPS)){
+  else if($_POST['submit'] == 'Consultar Deducciones Mensuales'){
+    $found = "false";
+    $inicioMesD = test_input($_POST["inicioMded"]);
+    $finalMesD = test_input($_POST["finalMded"]);
+    if(empty($inicioMesD)||empty($finalMesD)){
       echo "Hay espacios vacios";
     }
     else{
-      $tsql = "EXEC [dbo].[insertarPuesto] @inNombre = $insertPN, @inSalario = $insertPS";
-      $stmt = sqlsrv_query($conn, $tsql);
-      $check = sqlsrv_fetch($stmt);
-      echo "El puesto ha sido insertado";
+      $tsql = "EXEC [dbo].[RetornarFechaM] @inUsername = $Usuario";
+      $stmt = sqlsrv_query( $conn, $tsql);
+      while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+        $fechaCompareI = date_format($row['FechaInicio'],"Ymd");
+        $fechaCompareF = date_format($row['FechaFinal'],"Ymd");
+        if($fechaCompareI==$inicioMesD && $fechaCompareF==$finalMesD){
+            $found="true";
+        }
+      }
+      if($found=="false"){
+        echo "No existe una planilla semanal con las fechas dadas";
+      }
+      else{
+        $tsql = "EXEC ConsultarDeducciones @inUsername = $Usuario, @inFechaIni = $inicioMesD, @inFechaFin = $finalMesD";
+        $stmt = sqlsrv_query($conn, $tsql);
+        echo "<table border='4' class='stats' cellspacing='0'>
+          <tr>
+          <td class='hed' colspan='8'>Deducciones del Mes</td>
+          </tr>
+          <tr>
+          <th>Nombre</th>
+          <th>Porcentual</th>
+          <th>Monto</th>
+          </tr>"; 
+        while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+          echo "<tr>";
+          echo "<td>" . $row['Nombre'] . "</td>";
+          echo "<td>" . $row['Porcentual'] . "</td>";
+          echo "<td>" . $row['Monto'] . "</td>";
+          echo "</tr>";
+        }
+      }
     }
   }
-  else if($_POST['submit'] == 'Insertar Empleado'){
-    $nombreE = test_input($_POST["nameEI"]);
-    $tipoDocE = test_input($_POST["tipoEI"]);
-    $valorDocE = test_input($_POST["valorEI"]);
-    $puestoE = test_input($_POST["puestoEI"]);
-    $fechaE = test_input($_POST["fechaEI"]);
-    $depE = test_input($_POST["tipoEI"]);
-
-    if(empty($nombreE)||empty($tipoDocE)||empty($valorDocE)||empty($puestoE)||empty($fechaE)||empty($depE)){
+  else if ($_POST['submit'] == 'Consultar Salario Bruto'){
+    $found = "false";
+    $inicioSemanaS = test_input($_POST["inicioSsal"]);
+    $finalSemanaS = test_input($_POST["finalSsal"]);
+    if(empty($inicioSemanaS)||empty($finalSemanaS)){
       echo "Hay espacios vacios";
     }
     else{
-      $tsql = "EXEC [dbo].[insertarEmpleado] @inNombre = $nombreE, @inIdTipoDocIdentidad = $tipoDocE, @inValorDocIdentidad = $valorDocE, @inPuesto = $puestoE, @inFechaNacimiento = $fechaE, @inIdDepartamento = $depE";
-      $stmt = sqlsrv_query($conn, $tsql);
-      $check = sqlsrv_fetch($stmt);
-      echo "El empleado ha sido insertado";
+      $tsql = "EXEC [dbo].[RetornarFechaS] @inUsername = $Usuario";
+      $stmt = sqlsrv_query( $conn, $tsql);
+      while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+        $fechaCompareI = date_format($row['FechaInicio'],"Ymd");
+        $fechaCompareF = date_format($row['FechaFinal'],"Ymd");
+        if($fechaCompareI==$inicioSemanaS && $fechaCompareF==$finalSemanaS){
+            $found="true";
+        }
+      }
+      if($found=="false"){
+        echo "No existe una planilla semanal con las fechas dadas";
+      }
+      else{
+        $tsql = "EXEC ConsultarAsistencias @inUsername = $Usuario, @inFechaIni = $inicioSemanaS, @inFechaFin = $finalSemanaS";
+        $stmt = sqlsrv_query($conn, $tsql);
+        echo "<table border='4' class='stats' cellspacing='0'>
+          <tr>
+          <td class='hed' colspan='8'>Salario Bruto de la Semana</td>
+          </tr>
+          <tr>
+          <th>Nombre</th>
+          <th>Entrada</th>
+          <th>Salida</th>
+          <th>Horas</th>
+          <th>Monto</th>
+          </tr>"; 
+        while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+          $date1 = date_format($row['FechaEntrada'],"Ymd H:i:s");
+          $date2 = date_format($row['FechaSalida'],"Ymd H:i:s");
+          echo "<tr>";
+          echo "<td>" . $row['Nombre'] . "</td>";
+          echo "<td>" . $date1 . "</td>";
+          echo "<td>" . $date2 . "</td>";
+          echo "<td>" . $row['Horas'] . "</td>";
+          echo "<td>" . $row['Monto'] . "</td>";
+          echo "</tr>";
+        }
+      }
+    }
+  }
+  else if ($_POST['submit'] == 'Planillas Semanales'){
+    $tsql = "EXEC ConsultaSemanas @inUsername = $Usuario";
+    $stmt = sqlsrv_query($conn, $tsql);
+    echo "<table border='4' class='stats' cellspacing='0'>
+      <tr>
+      <td class='hed' colspan='8'>Salario Bruto de la Semana</td>
+      </tr>
+      <tr>
+      <th>Inicio</th>
+      <th>Fin</th>
+      <th>Salario Bruto</th>
+      <th>Salario Neto</th>
+      <th>Deducciones</th>
+      <th>Horas Ordinarias</th>
+      <th>Horas Extras</th>
+      <th>Horas Extras (Doble)</th>
+      </tr>"; 
+    while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+      $date1 = date_format($row['FechaInicio'],"Ymd");
+      $date2 = date_format($row['FechaFinal'],"Ymd");
+      echo "<tr>";
+      echo "<td>" . $date1 . "</td>";
+      echo "<td>" . $date2 . "</td>";
+      echo "<td>" . $row['SalarioBruto'] . "</td>";
+      echo "<td>" . $row['SalarioNeto'] . "</td>";
+      echo "<td>" . $row['Deducciones'] . "</td>";
+      echo "<td>" . $row['HO'] . "</td>";
+      echo "<td>" . $row['HE'] . "</td>";
+      echo "<td>" . $row['HD'] . "</td>";
+      echo "</tr>";
+    }
+  }
+  else if ($_POST['submit'] == 'Planillas Mensuales'){
+    $tsql = "EXEC SalariosAnuales @inUsername = $Usuario";
+    $stmt = sqlsrv_query($conn, $tsql);
+    echo "<table border='4' class='stats' cellspacing='0'>
+      <tr>
+      <td class='hed' colspan='8'>Salario Bruto de la Semana</td>
+      </tr>
+      <tr>
+      <th>Inicio</th>
+      <th>Fin</th>
+      <th>Salario Bruto</th>
+      <th>Salario Neto</th>
+      <th>Deducciones</th>
+      </tr>"; 
+    while( $row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC) ) {
+      $date1 = date_format($row['FechaInicio'],"Ymd");
+      $date2 = date_format($row['FechaFinal'],"Ymd");
+      echo "<tr>";
+      echo "<td>" . $date1 . "</td>";
+      echo "<td>" . $date2 . "</td>";
+      echo "<td>" . $row['SalarioBruto'] . "</td>";
+      echo "<td>" . $row['SalarioNeto'] . "</td>";
+      echo "<td>" . $row['Deducciones'] . "</td>";
+      echo "</tr>";
     }
   }
 }
